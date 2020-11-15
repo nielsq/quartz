@@ -1,0 +1,28 @@
+<h1>Hi <%= givenName %></h1>
+
+
+
+<% if (mods) { %>
+  <p>Quarts Activ Modules</p>
+  <table>
+    <% for(var i=0; i < mods.length; i++) { %>
+       <tr>
+         <td><%= mods[i].app_name %></td>
+       </tr>
+    <% } %>
+  </table>
+ 
+ <% }else { %>
+
+  <p>NO MODS</p>
+
+  <%} %>
+
+  <a href="http://vssUbuntu:3000/livestream/channel/nquanz" > 123</a>
+
+</a>
+
+<form action="/logout?_method=DELETE" method="POST">
+  <button type="submit">Log Out</button>
+
+</form>

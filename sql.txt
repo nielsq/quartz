@@ -1,0 +1,8 @@
+DROP DATABASE quartz;
+CREATE DATABASE quartz;
+USE quartz;
+
+CREATE TABLE quartz_config(key_name VARCHAR(255), setting VARCHAR(255), PRIMARY KEY (key_name));
+CREATE TABLE quartz_user(sid VARCHAR(255), last_login DATETIME, is_logged_in BOOLEAN,PRIMARY KEY (sid));
+CREATE TABLE quartz_apps(app_name VARCHAR (255), app_activ BOOLEAN, app_admin_group VARCHAR(255), PRIMARY KEY (app_name));
+CREATE TABLE app_livestream_channel(sid VARCHAR(255), chan_title VARCHAR(255), chan_descrip VARCHAR(255), chan_key VARCHAR(255) UNIQUE, chan_log_on_only BOOLEAN,FOREIGN KEY (sid) REFERENCES quartz_user(sid));
