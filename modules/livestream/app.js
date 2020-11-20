@@ -2,9 +2,12 @@ const RTMPserver = require('../livestream/Node-Media-Server/app');
 const express = require('express');
 const router = express.Router();
 const database = require('./database')
-var userMod = require("../user");
-const { connect } = require('../placeholder');
+const util = require('../util');
+
+
+
 const config = {
+  logType: 0,
   rtmp: {
     port: 1935,
     chunk_size: 60000,
@@ -47,23 +50,23 @@ const config = {
         {
             app: 'live',
             hls: true,
-            hlsFlags: '[hls_time=2:hls_list_size=3:hls_flags=delete_segments]',
+            hlsFlags: '[hls_time=1:hls_list_size=1:hls_flags=delete_segments]',
         }
     ]
 }
 };
 
+RTMPserver.startStreamServer(config);
+
 router.use(express.static('player'));
 
 router.get('/', function(req, res) {
-  RTMPserver.startStreamServer(config);
+
   res.send('test');
 });
 
 router.get("/admin", function(req, res){
-
   res.render('admin.ejs')
-
 })
 
 router.get("/channel/:chn", async function(req, res) {
@@ -72,6 +75,7 @@ router.get("/channel/:chn", async function(req, res) {
   var channel = await database.getChannel(chn)
   var user = await req.user
   var key = null
+  var link = "http://vssubuntu:3000/livestream/content/"+chn+"/index.m3u8"
   
   if(!(user === undefined)){
 
@@ -81,34 +85,16 @@ router.get("/channel/:chn", async function(req, res) {
     
   }
 
-  res.render('channel.ejs', { name:chn, chn: channel, key:key})
+  res.render('channel.ejs', { name:chn, chn: channel, key:key, link:link})
   
 })
 
 router.use("/content/:chn", async function(req, res){
-
-
-
   const chn = await req.params.chn
   const key = await database.getStreamKey(chn)
   console.log(req.url)
   console.log(__dirname + "/media/live/" + key + "/")
-  //router.ServeFiles("/media/live/" + key + req.url)
   res.sendFile(__dirname + "/media/live/" + key + req.url);
 })
-
-
-
-function isEmpty(obj) {
-  return Object.keys(obj).length === 0;
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}  
-
-
 
 module.exports = router;

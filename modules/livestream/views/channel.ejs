@@ -2,8 +2,6 @@
 
 <h1>TTTLE: <%= chn.title %></h1>
 
-
-
 <p> DESCIPTION <%= chn.descirp %></p>
 
 <% if (key) { %>
@@ -11,21 +9,16 @@
 <% }else { %>
     <p>NONOONO</p>
 <%} %>
+<link href="http://vssubuntu:3000/livestream/player/video-js.css" rel="stylesheet">
 
-
-<link href="http://vssubuntu:3000/livestream/player/video-js-7.8.2/video-js.css" rel="stylesheet">
-<link href="http://vssubuntu:3000/livestream/player/videojs-quality-selector/css/quality-selector.css" rel="stylesheet">
-
-
-<video id="test" class="video-js" style="width: 100%;" controls>
-    <source src="http://vssubuntu:3000/livestream/content/ewiedmer/index.m3u8" type="application/x-mpegURL" label="HD"/>
-</video>
-
-<script src="http://vssubuntu:3000/livestream/player/video.js"></script>
-<script src="http://vssubuntu:3000/livestream/player/videojs-quality-selector/js/silvermine-videojs-quality-selector.js"></script>
-
+<video-js id=vid1 width=600 height=300 class="vjs-default-skin" controls>
+    <source
+    src="<%=link%>"
+       type="application/x-mpegURL">
+</video-js>
+<script src="http://vssubuntu:3000/livestream/player/video.min.js"></script>
+<script src="http://vssubuntu:3000/livestream/player/videojs-http-streaming.min.js"></script>
 <script>
-	var player = videojs('test');	
-	player.controlBar.addChild('QualitySelector');
-	player.play();
+  var player = videojs('vid1');
+  player.play();
 </script>

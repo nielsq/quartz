@@ -10,6 +10,7 @@ const initializePassport = require('./passport-config')
 const placeholder = require('./modules/placeholder');
 const database = require('./modules/database');
 const livestream = require('./modules/livestream/app');
+const util = require('./modules/util');
 
 
 
@@ -38,23 +39,22 @@ app.get("/", (req, res) => {
   res.render("index.ejs")
 })
 
-app.get("/login", checkNotAuthenticated, (req, res) => {
-
+app.get("/login", util.checkNotAuthenticated, (req, res) => {
   res.render("login.ejs")
-
 })
 
-app.post('/login', checkNotAuthenticated, passport.authenticate('local', {
+app.post('/login', util.checkNotAuthenticated, passport.authenticate('local', {
   successRedirect: '/dashboard',
   failureRedirect: '/login',
   failureFlash: true
 }))
 
-app.get('/login', checkNotAuthenticated, (req, res) => {
+
+app.get('/login', util.checkNotAuthenticated, (req, res) => {
   res.render('login.ejs')
 })
 
-app.get('/dashboard', checkAuthenticated, async (req, res) => {
+app.get('/dashboard', util.checkAuthenticated, async (req, res) => {
   
   var user = await req.user
   
@@ -64,17 +64,11 @@ app.get('/dashboard', checkAuthenticated, async (req, res) => {
  
 })
 
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}  
 
 app.delete('/logout', (req, res) => {
   req.logOut()
   res.redirect('/login')
 })
-
 
 
 app.use('/placeholder', placeholder);
@@ -83,21 +77,6 @@ app.use('/livestream', livestream);
 
 app.use('/livestream/player', express.static('modules/livestream/player'));
 
-
-function checkAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next()
-  }
-
-  res.redirect('/login')
-}
-
-function checkNotAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return res.redirect('/dashboard')
-  }
-  next()
-}
 
 
 app.listen(3000)

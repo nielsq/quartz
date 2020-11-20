@@ -15,9 +15,7 @@ exports.getUserByNickname = async function (nickname) {
     var tmp = await ad.getUserByUname(nickname)
     if(tmp){
         var user = await database.getUser(tmp.objectSid)
-
         return user
-        
     } else {
         return null
     }
