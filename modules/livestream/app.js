@@ -76,7 +76,7 @@ router.get("/channel/:chn", async function(req, res) {
   var user = await req.user
   var key = null
   var link = "http://vssubuntu:3000/livestream/content/"+chn+"/index.m3u8"
-  
+
   if(!(user === undefined)){
 
     if(user.objectSid == channel.sid){
@@ -85,16 +85,25 @@ router.get("/channel/:chn", async function(req, res) {
     
   }
 
-  res.render('channel.ejs', { name:chn, chn: channel, key:key, link:link})
+  res.render('channel.ejs', { name:chn, chn: channel[0], key:key, link:link})
   
 })
 
 router.use("/content/:chn", async function(req, res){
-  const chn = await req.params.chn
-  const key = await database.getStreamKey(chn)
-  console.log(req.url)
-  console.log(__dirname + "/media/live/" + key + "/")
+  var chn = await req.params.chn
+  var key = await database.getStreamKey(chn)
+  var chnDetails = await database.getChannel(chn)
+  
+  if(chnDetails[0].chan_log_on_only == 1){
+    if(!req.isAuthenticated()){
+      res.send("NOPE")
+      return;
+    }
+  } 
+
   res.sendFile(__dirname + "/media/live/" + key + req.url);
 })
+
+router.use('/player', express.static(__dirname + '/player'));
 
 module.exports = router;

@@ -6,16 +6,6 @@ var ad = require('../ad')
 
 const uuid = require('uuid');
 
-class Channel {
-    constructor(sid, chan_title, chan_descrip, chan_log_on_only){
-        this.sid = sid;
-        this.chan_title = chan_title;
-        this.chan_descrip = chan_descrip;
-        this.chan_log_on_only = chan_log_on_only;
-    }
-}
-
-//create Channel
 
 async function createChannel(name){
 
@@ -48,7 +38,7 @@ async function getChannel(name){
         }
 
     } else {
-        return chn = new Channel(sid,rows2.chan_title, rows2.chan_descrip ,rows2.chan_log_on_only)
+        return rows2
     }
 
 }
@@ -57,7 +47,7 @@ async function getStreamKey(name){
 
     var sid = (await userMod.getUserByNickname(name)).objectSid
     var q2 ="SELECT chan_key from app_livestream_channel WHERE sid = \""+ sid + "\";"
-    const [rows2, fields2] = await database.promisePool.query(q2).catch(console.log());
+    const [rows2, fields2] = await database.promisePool.query(q2);
 
     return rows2[0].chan_key
 }

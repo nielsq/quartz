@@ -33,7 +33,7 @@ const promisePool = pool.promise();
 async function getActivModules(){
 
     var q2 =" SELECT app_name FROM quartz_apps WHERE app_activ = 1;"
-    const [rows2, fields2] = await promisePool.query(q2).catch(console.log());
+    const [rows2, fields2] = await promisePool.query(q2).catch(console.log("ERROR getAcitvModules"));
 
     if(isEmpty(rows2)){
         return null;
@@ -45,13 +45,13 @@ async function getActivModules(){
 async function activeModule(name){
 
     var q = "UPDATE quartz_apps Set app_activ WHERE app_name=\""+ name+"\";"
-    const [rows2, fields2] = await promisePool.query(q).catch(console.log());
+    const [rows2, fields2] = await promisePool.query(q).catch(console.log("Error activeModules"));
 }
 
 async function addModule(name, status, admin_group){
 
     var q = "INSERT INTO quartz_apps VALUES (\""+name+"\"," +status + ", \""+admin_group+"\");"
-    const [rows2, fields2] = await promisePool.query(q).catch(console.log());
+    const [rows2, fields2] = await promisePool.query(q).catch(console.log("add Module"));
 
 }
    
@@ -85,10 +85,9 @@ async function getUser(sid) {
 
 async function createUser(sid) {
 
-    console.log("Creating User with sid: " + sid)
     var values1 = "(\"" + sid + "\");";
     var q1 = "INSERT INTO quartz_user (sid) VALUES "
-    const [rows1, fields1] = await promisePool.query(q1  + values1).catch(console.log());
+    const [rows1, fields1] = await promisePool.query(q1  + values1).catch(console.log("ERROR CREATE USER"));
 
     return true;
   }

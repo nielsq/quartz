@@ -1,14 +1,20 @@
 <h1>CHANNEL BY <%= name %></h1>
 
-<h1>TTTLE: <%= chn.title %></h1>
+<h1>TTTLE: <%= chn.chan_title %></h1>
 
-<p> DESCIPTION <%= chn.descirp %></p>
+<p> DESCIPTION <%= chn.chan_descrip %></p>
 
 <% if (key) { %>
     <p>streaming KEY: <%=key%></p>
 <% }else { %>
     <p>NONOONO</p>
 <%} %>
+
+<% if (chn.chan_log_on_only == 1) { %>
+    <p>Bitte Loggen Sie sich ein um den Stream zu sehen</p>
+<% } %>
+
+
 <link href="http://vssubuntu:3000/livestream/player/video-js.css" rel="stylesheet">
 
 <video-js id=vid1 width=600 height=300 class="vjs-default-skin" controls>

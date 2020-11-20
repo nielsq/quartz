@@ -75,8 +75,4 @@ app.use('/placeholder', placeholder);
 
 app.use('/livestream', livestream);
 
-app.use('/livestream/player', express.static('modules/livestream/player'));
-
-
-
 app.listen(3000)
