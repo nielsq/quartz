@@ -77,15 +77,7 @@ router.get("/channel/:chn", async function(req, res) {
   var key = null
   var link = "http://vssubuntu:3000/livestream/content/"+chn+"/index.m3u8"
 
-  if(!(user === undefined)){
-
-    if(user.objectSid == channel.sid){
-      var key = await database.getStreamKey(chn)
-    }
-    
-  }
-
-  res.render('channel.ejs', { name:chn, chn: channel[0], key:key, link:link})
+  res.render('channel.ejs', { name:chn, chn: channel[0], link:link})
   
 })
 

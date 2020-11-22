@@ -75,4 +75,6 @@ app.use('/placeholder', placeholder);
 
 app.use('/livestream', livestream);
 
+app.use('/content', express.static(__dirname + '/content'));
+
 app.listen(3000)
