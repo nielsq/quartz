@@ -10,8 +10,6 @@ const initializePassport = require('./passport-config')
 const placeholder = require('./modules/placeholder');
 const database = require('./modules/database');
 const livestream = require('./modules/livestream/app');
-const util = require('./modules/util');
-
 
 
 initializePassport(passport)
@@ -39,28 +37,24 @@ app.get("/", (req, res) => {
   res.render("index.ejs")
 })
 
-app.get("/login", util.checkNotAuthenticated, (req, res) => {
-  res.render("login.ejs")
-})
-
-app.post('/login', util.checkNotAuthenticated, passport.authenticate('local', {
+app.post('/login', checkNotAuthenticated, passport.authenticate('local', {
   successRedirect: '/dashboard',
   failureRedirect: '/login',
   failureFlash: true
 }))
 
 
-app.get('/login', util.checkNotAuthenticated, (req, res) => {
-  res.render('login.ejs')
+app.get('/login', checkNotAuthenticated, (req, res) => {
+  res.render('login.ejs', { page: "login"} )
 })
 
-app.get('/dashboard', util.checkAuthenticated, async (req, res) => {
+app.get('/dashboard', checkAuthenticated, async (req, res) => {
   
   var user = await req.user
   
   var aMods = await database.getActivModules()
   console.log(user.nickname)
-  res.render('dashboard.ejs', { givenName: user.nickname, mods: aMods  })
+  res.render('dashboard.ejs', { givenName: user.nickname, mods: aMods, page:"dashboard"  })
  
 })
 
@@ -78,3 +72,21 @@ app.use('/livestream', livestream);
 app.use('/content', express.static(__dirname + '/content'));
 
 app.listen(3000)
+
+
+function checkAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next()
+  }
+
+  res.redirect('/login')
+}
+
+function checkNotAuthenticated (req, res, next) {
+  if (req.isAuthenticated()) {
+    return res.redirect('/dashboard')
+  }
+  next()
+}
+
+

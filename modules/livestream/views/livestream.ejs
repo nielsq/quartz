@@ -10,23 +10,7 @@
   <%- include('./header'); %>
 </header>
 
-<h1>Hi <%= givenName %></h1>
-
-<% if (mods) { %>
-  <p>Quarts Activ Modules</p>
-  <table>
-    <% for(var i=0; i < mods.length; i++) { %>
-       <tr>
-         <td><%= mods[i].app_name %></td>
-       </tr>
-    <% } %>
-  </table>
- 
- <% }else { %>
-
-  <p>NO MODS</p>
-
-  <%} %>
+<h1>Livestreams</h1>
 
 
   <a href="/livestream/channel/nquanz" > nquanz</a>

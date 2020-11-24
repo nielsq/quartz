@@ -62,7 +62,7 @@ router.use(express.static('player'));
 
 router.get('/', function(req, res) {
 
-  res.send('test');
+  res.render('livestream.ejs', {page:"livestream"})
 });
 
 router.get("/admin", function(req, res){
@@ -77,7 +77,7 @@ router.get("/channel/:chn", async function(req, res) {
   var key = null
   var link = "http://vssubuntu:3000/livestream/content/"+chn+"/index.m3u8"
 
-  res.render('channel.ejs', { name:chn, chn: channel[0], link:link})
+  res.render('channel.ejs', { name:chn, chn: channel[0], link:link, page:"livestream"})
   
 })
 

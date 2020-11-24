@@ -4,12 +4,12 @@
       return next()
     }
   
-    res.redirect('/login')
+    res.redirect('/login', {page:"login"})
   }
   
    exports.checkNotAuthenticated = function(req, res, next) {
     if (req.isAuthenticated()) {
-      return res.redirect('/dashboard')
+      return res.redirect('/dashboard', {page:"dashboard"})
     }
     next()
   }
