@@ -1,4 +1,14 @@
-<%- include('../../../views/header'); %>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+
+  <%- include('./head'); %>
+</head>
+
+
+<header>
+  <%- include('./header'); %>
+</header>
 
 <h1>CHANNEL BY <%= name %></h1>
 
@@ -9,7 +19,6 @@
 <% if (chn.chan_log_on_only == 1) { %>
     <p>Bitte Loggen Sie sich ein um den Stream zu sehen</p>
 <% } %>
-
 
 <link href="/livestream/player/video-js.css" rel="stylesheet">
 
@@ -24,3 +33,10 @@
   var player = videojs('vid1');
   player.play();
 </script>
+<footer>
+    <%- include('./footer'); %>
+</footer>
+
+</body>
+</html>
+

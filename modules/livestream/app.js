@@ -60,9 +60,11 @@ RTMPserver.startStreamServer(config);
 
 router.use(express.static('player'));
 
-router.get('/', function(req, res) {
+router.get('/', async function(req, res) {
 
-  res.render('livestream.ejs', {page:"livestream"})
+  var user = await req.user
+
+  res.render('livestream.ejs', {page:"livestream",user:user})
 });
 
 router.get("/admin", function(req, res){
@@ -74,10 +76,9 @@ router.get("/channel/:chn", async function(req, res) {
   const chn = req.params.chn
   var channel = await database.getChannel(chn)
   var user = await req.user
-  var key = null
   var link = "http://vssubuntu:3000/livestream/content/"+chn+"/index.m3u8"
 
-  res.render('channel.ejs', { name:chn, chn: channel[0], link:link, page:"livestream"})
+  res.render('channel.ejs', { name:chn, chn: channel[0], link:link, page:"livestream", user:user})
   
 })
 

@@ -6,14 +6,10 @@ function initialize(passport) {
   const authenticateUser = async (name, passpord, done) => {
     
     const result = await ad.authUser(name+ process.env.DOMAIN, passpord)
-
-
+    
     if(result){
-      
-      //const user = await ad.getUserByUname(name)
-      
-      const user = await userMod.getUserByNickname(name)
 
+      const user = await userMod.getUserByNickname(name)
 
         return done(null, user)
         

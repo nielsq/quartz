@@ -45,7 +45,7 @@ app.post('/login', checkNotAuthenticated, passport.authenticate('local', {
 
 
 app.get('/login', checkNotAuthenticated, (req, res) => {
-  res.render('login.ejs', { page: "login"} )
+  res.render('login.ejs', { page: "login", user:""} )
 })
 
 app.get('/dashboard', checkAuthenticated, async (req, res) => {
@@ -54,7 +54,7 @@ app.get('/dashboard', checkAuthenticated, async (req, res) => {
   
   var aMods = await database.getActivModules()
   console.log(user.nickname)
-  res.render('dashboard.ejs', { givenName: user.nickname, mods: aMods, page:"dashboard"  })
+  res.render('dashboard.ejs', { user:user, mods: aMods, page:"dashboard"  })
  
 })
 
