@@ -3,8 +3,8 @@ const express = require('express');
 const router = express.Router();
 const database = require('./database')
 const util = require('../util');
-
-
+const fetch = require('node-fetch');
+const util2 = require('util')
 
 const config = {
   logType: 0,
@@ -67,8 +67,14 @@ router.get('/', async function(req, res) {
   res.render('livestream.ejs', {page:"livestream",user:user})
 });
 
-router.get("/admin", function(req, res){
-  res.render('admin.ejs')
+router.get("/admin", async function(req, res){
+
+
+  var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
+
+  var test = JSON.stringify(resp)
+  console.log(test)
+  res.render('admin.ejs', {streams:resp})
 })
 
 router.get("/channel/:chn", async function(req, res) {
@@ -76,7 +82,7 @@ router.get("/channel/:chn", async function(req, res) {
   const chn = req.params.chn
   var channel = await database.getChannel(chn)
   var user = await req.user
-  var link = "http://vssubuntu:3000/livestream/content/"+chn+"/index.m3u8"
+  var link = "/livestream/content/"+chn+"/index.m3u8"
 
   res.render('channel.ejs', { name:chn, chn: channel[0], link:link, page:"livestream", user:user})
   
@@ -94,7 +100,12 @@ router.use("/content/:chn", async function(req, res){
     }
   } 
 
-  res.sendFile(__dirname + "/media/live/" + key + req.url);
+  res.sendFile(__dirname + "/media/live/" + key + req.url,  function (err) {
+    if (err) {
+      res.status(err.status).end();
+    }
+  });
+
 })
 
 router.use('/player', express.static(__dirname + '/player'));

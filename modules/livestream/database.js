@@ -15,7 +15,7 @@ async function createChannel(name){
 
     var values = "(\"" + sid + "\", \"TITLE\", \"DESCIPTION\", \"" + test + "\", 0);"
     var q2 ="INSERT INTO app_livestream_channel VALUES "
-    const [rows2, fields2] = await database.promisePool.query(q2 + values).catch(console.log());
+    const [rows2, fields2] = await database.promisePool.query(q2 + values);
 
 }
 
@@ -54,7 +54,7 @@ async function getStreamKey(name){
 
 function isEmpty(obj) {
     return Object.keys(obj).length === 0;
-  }
+}
 
 
 module.exports.getStreamKey = getStreamKey;

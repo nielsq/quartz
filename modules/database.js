@@ -87,7 +87,7 @@ async function createUser(sid) {
 
     var values1 = "(\"" + sid + "\");";
     var q1 = "INSERT INTO quartz_user (sid) VALUES "
-    const [rows1, fields1] = await promisePool.query(q1  + values1).catch(console.log("ERROR CREATE USER"));
+    await promisePool.query(q1  + values1);
 
     return true;
   }
