@@ -64,17 +64,43 @@ router.get('/', async function(req, res) {
 
   var user = await req.user
 
-  res.render('livestream.ejs', {page:"livestream",user:user})
-});
-
-router.get("/admin", async function(req, res){
-
-
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
 
   var test = JSON.stringify(resp)
   console.log(test)
-  res.render('admin.ejs', {streams:resp})
+
+
+
+  res.render('livestream.ejs', {page:"livestream",user:user})
+});
+
+router.get("/settings/",util.checkAuthenticated, async function(req, res){
+
+  var user = await req.user
+  var channel = await database.getChannel(user.nickname)
+  var key = await database.getStreamKey(user.nickname)
+
+  res.render('settings.ejs', { chn: channel[0], Skey:key, page:"livestream", user:user})
+
+})
+
+router.post("/settings/", util.checkAuthenticated, async function(req, res){
+  var user = await req.user
+
+  var title = req.body.Title
+  var descrip = req.body.descrip
+  var loginOnly = req.body.loginOnly
+
+  if(loginOnly == "on"){
+    loginOnly = 1
+  } else {
+    loginOnly = 0
+  }
+
+  await database.updateChannel(user.nickname, title, descrip, loginOnly)
+
+  res.redirect('/livestream/channel/' + user.nickname)
+
 })
 
 router.get("/channel/:chn", async function(req, res) {
@@ -83,8 +109,18 @@ router.get("/channel/:chn", async function(req, res) {
   var channel = await database.getChannel(chn)
   var user = await req.user
   var link = "/livestream/content/"+chn+"/index.m3u8"
+  var same
 
-  res.render('channel.ejs', { name:chn, chn: channel[0], link:link, page:"livestream", user:user})
+  if(user){
+    if(user.nickname == chn){
+      same = true
+    } else {
+      same = false
+    }
+  }
+  
+
+  res.render('channel.ejs', { name:chn, chn: channel[0], link:link, page:"livestream", user:user, same:same})
   
 })
 

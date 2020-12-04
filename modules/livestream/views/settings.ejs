@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+
+  <%- include('./head'); %>
+</head>
+
+
+<header>
+  <%- include('./header'); %>
+</header>
+
+<h1>Einstellungen</h1>
+
+<p>Server: rtmp://vssUbuntu/live</p>
+<p>Stream Key: <%= Skey %></p>
+
+<form id="change"action="/livestream/settings/?_method=post" method="POST">
+  <label for="Title">Title:</label><br>
+  <input type="text" id="Title" name="Title" value="<%= chn.chan_title %>"><br>
+  <label for="descrip">Beschreibung:</label><br>
+  <input type="text" id="descrip" name="descrip" value="<%= chn.chan_descrip %>"><br>
+  <label for="loginOnly">Nur für User: </label>
+  <input type="checkbox" id="loginOnly" name="loginOnly" <% if (chn.chan_log_on_only == 1 ) {%> checked <%}%>>
+  <br><br>
+  <input type="submit" value="Senden">
+</form>
+
+
+<footer>
+    <%- include('./footer'); %>
+</footer>
+
+</body>
+</html>
+

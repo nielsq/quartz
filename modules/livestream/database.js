@@ -19,6 +19,15 @@ async function createChannel(name){
 
 }
 
+async function updateChannel(name, title, descrip, onlyUser){
+
+    var sid = (await userMod.getUserByNickname(name)).objectSid
+    var values = "chan_title=\""+title+ "\", chan_descrip=\""+descrip+"\" ,chan_log_on_only=\""+ onlyUser + "\" "
+    var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
+
+    await database.promisePool.query(q);
+}
+
 async function getChannel(name){
 
     var sid = (await userMod.getUserByNickname(name)).objectSid
@@ -60,3 +69,4 @@ function isEmpty(obj) {
 module.exports.getStreamKey = getStreamKey;
 module.exports.getChannel = getChannel;
 module.exports.createChannel = createChannel;
+module.exports.updateChannel = updateChannel;
