@@ -5,15 +5,38 @@
   <%- include('./head'); %>
 </head>
 
-
 <header>
   <%- include('./header'); %>
 </header>
 
+<script type="text/javascript">
+    function toggle_visibility(id) {
+       var e = document.getElementById(id);
+       if(e.style.display == 'block')
+          e.style.display = 'none';
+       else
+          e.style.display = 'block';
+    }
+</script>
+
 <h1>Einstellungen</h1>
 
-<p>Server: rtmp://vssUbuntu/live</p>
-<p>Stream Key: <%= Skey %></p>
+<div id="streamkey" style="display: none;">
+
+  <p>Server: rtmp://vssUbuntu/live</p>
+  <p>Streamkey: <%= Skey %></p>
+
+ <form id="Renew"action="/livestream/settings/streamKey/?_method=post" method="POST">
+  <input type="submit" value="Neu erstellen">
+ </form>
+
+ <br>
+
+</div>
+
+<button onclick="toggle_visibility('streamkey');">Stream Einstellungen zeigen</button>
+
+<br><br>
 
 <form id="change"action="/livestream/settings/?_method=post" method="POST">
   <label for="Title">Title:</label><br>
@@ -33,4 +56,3 @@
 
 </body>
 </html>
-

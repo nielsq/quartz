@@ -19,6 +19,18 @@ async function createChannel(name){
 
 }
 
+async function renewStreamKey(name){
+    
+    const newUUID = uuid.v4();
+
+    var sid = (await userMod.getUserByNickname(name)).objectSid
+    var values = "chan_key=\""+newUUID+ "\""
+    var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
+
+    await database.promisePool.query(q);
+
+}
+
 async function updateChannel(name, title, descrip, onlyUser){
 
     var sid = (await userMod.getUserByNickname(name)).objectSid
@@ -70,3 +82,4 @@ module.exports.getStreamKey = getStreamKey;
 module.exports.getChannel = getChannel;
 module.exports.createChannel = createChannel;
 module.exports.updateChannel = updateChannel;
+module.exports.renewStreamKey = renewStreamKey;

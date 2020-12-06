@@ -66,10 +66,6 @@ router.get('/', async function(req, res) {
 
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
 
-  var test = JSON.stringify(resp)
-  console.log(test)
-
-
 
   res.render('livestream.ejs', {page:"livestream",user:user})
 });
@@ -99,8 +95,17 @@ router.post("/settings/", util.checkAuthenticated, async function(req, res){
 
   await database.updateChannel(user.nickname, title, descrip, loginOnly)
 
+  
   res.redirect('/livestream/channel/' + user.nickname)
 
+})
+
+router.post("/settings/streamKey", util.checkAuthenticated, async function (req, res){
+
+  var user = await req.user
+
+  await database.renewStreamKey(user.nickname)
+  res.redirect('/livestream/settings/')
 })
 
 router.get("/channel/:chn", async function(req, res) {
