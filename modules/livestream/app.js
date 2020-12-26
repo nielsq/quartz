@@ -4,6 +4,8 @@ const router = express.Router();
 const database = require('./database')
 const util = require('../util');
 const fetch = require('node-fetch');
+const thumbnail = require('./thumbnail');
+const cron = require('node-cron');
 const util2 = require('util')
 
 const config = {
@@ -65,8 +67,6 @@ router.get('/', async function(req, res) {
   var user = await req.user
 
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
-
-
   res.render('livestream.ejs', {page:"livestream",user:user})
 });
 
@@ -113,7 +113,6 @@ router.get("/channel/:chn", async function(req, res) {
   const chn = req.params.chn
   var channel = await database.getChannel(chn)
   var user = await req.user
-  var link = "/livestream/content/"+chn+"/index.m3u8"
   var same
 
   if(user){
@@ -125,7 +124,7 @@ router.get("/channel/:chn", async function(req, res) {
   }
   
 
-  res.render('channel.ejs', { name:chn, chn: channel[0], link:link, page:"livestream", user:user, same:same})
+  res.render('channel.ejs', { name:chn, chn: channel[0], page:"livestream", user:user, same:same})
   
 })
 
@@ -150,5 +149,24 @@ router.use("/content/:chn", async function(req, res){
 })
 
 router.use('/player', express.static(__dirname + '/player'));
+
+function isEmpty(obj) {
+  return Object.keys(obj).length === 0;
+}
+
+async function genThumbnails(){
+
+  var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
+  if(!isEmpty(resp))
+  Object.keys(resp.live).forEach (item => {
+    thumbnail.generateStreamThumbnail(config, item) 
+  })
+ 
+}
+
+
+cron.schedule('*/1 * * * *', () => {
+  genThumbnails()
+});
 
 module.exports = router;

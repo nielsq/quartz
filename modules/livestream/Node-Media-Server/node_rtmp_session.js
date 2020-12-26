@@ -217,6 +217,7 @@ class NodeRtmpSession {
   flush() {
     if (this.numPlayCache > 0) {
       this.res.uncork();
+
     }
   }
 
@@ -1198,6 +1199,7 @@ class NodeRtmpSession {
   }
 
   onDeleteStream(invokeMessage) {
+    
     if (invokeMessage.streamId == this.playStreamId) {
       if (this.isIdling) {
         context.idlePlayers.delete(this.id);
@@ -1217,9 +1219,12 @@ class NodeRtmpSession {
       this.playStreamId = 0;
       this.playStreamPath = "";
     }
+ 
 
     if (invokeMessage.streamId == this.publishStreamId) {
+       
       if (this.isPublishing) {
+        
         Logger.log(`[rtmp publish] Close stream. id=${this.id} streamPath=${this.publishStreamPath} streamId=${this.publishStreamId}`);
         context.nodeEvent.emit("donePublish", this.id, this.publishStreamPath, this.publishArgs);
         if (this.isStarting) {
@@ -1231,10 +1236,12 @@ class NodeRtmpSession {
           if (playerSession instanceof NodeRtmpSession) {
             playerSession.sendStatusMessage(playerSession.playStreamId, "status", "NetStream.Play.UnpublishNotify", "stream is now unpublished.");
             playerSession.flush();
+            NodeCoreUtils.delThumbnail(this.publishStreamPath)
           } else {
             playerSession.stop();
           }
         }
+        
 
         //let the players to idlePlayers
         for (let playerId of this.players) {
@@ -1260,7 +1267,9 @@ class NodeRtmpSession {
       this.publishStreamId = 0;
       this.publishStreamPath = "";
     }
+     
   }
+ 
 }
 
 module.exports = NodeRtmpSession;
