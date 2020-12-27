@@ -4,61 +4,23 @@ const router = express.Router();
 const database = require('./database')
 const util = require('../util');
 const fetch = require('node-fetch');
-const thumbnail = require('./thumbnail');
-const cron = require('node-cron');
-const util2 = require('util')
+const busboy = require('connect-busboy')
+const ls_util = require('./ls_util')
+const fs = require('fs')
+const flash = require('express-flash')
+const session = require('express-session')
 
-const config = {
-  logType: 0,
-  rtmp: {
-    port: 1935,
-    chunk_size: 60000,
-    gop_cache: true,
-    ping: 30,
-    ping_timeout: 60,
-    /*
-    ssl: {
-      port: 443,
-      key: './privatekey.pem',
-      cert: './certificate.pem',
-    }
-    */
-  },
-  http: {
-    port: 8000,
-    mediaroot: './modules/livestream/media',
-    webroot: './www',
-    allow_origin: '*',
-    api: true
-  },
-/*
-  https: {
-    port: 8443,
-    key: './privatekey.pem',
-    cert: './certificate.pem',
-  },
-*/
-  auth: {
-    api: true,
-    api_user: 'admin',
-    api_pass: 'admin',
-    play: false,
-    publish: false,
-    secret: 'nodemedia2017privatekey'
-  },
-  trans: {
-    ffmpeg: '/usr/bin/ffmpeg',
-    tasks: [
-        {
-            app: 'live',
-            hls: true,
-            hlsFlags: '[hls_time=1:hls_list_size=1:hls_flags=delete_segments]',
-        }
-    ]
-}
-};
+router.use(flash())
+router.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false
+}))
 
-RTMPserver.startStreamServer(config);
+router.use(busboy());
+
+
+RTMPserver.startStreamServer(ls_util.config);
 
 router.use(express.static('player'));
 
@@ -76,11 +38,13 @@ router.get("/settings/",util.checkAuthenticated, async function(req, res){
   var channel = await database.getChannel(user.nickname)
   var key = await database.getStreamKey(user.nickname)
 
-  res.render('settings.ejs', { chn: channel[0], Skey:key, page:"livestream", user:user})
+  res.render('settings.ejs', { chn: channel[0], Skey:key, page:"livestream", user:user, status: req.flash('status')})
 
 })
 
 router.post("/settings/", util.checkAuthenticated, async function(req, res){
+
+
   var user = await req.user
 
   var title = req.body.Title
@@ -104,8 +68,50 @@ router.post("/settings/streamKey", util.checkAuthenticated, async function (req,
 
   var user = await req.user
 
-  await database.renewStreamKey(user.nickname)
-  res.redirect('/livestream/settings/')
+  var oldKey = await database.getStreamKey(user.nickname)
+  var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
+
+    if(!isEmpty(resp)){
+      if(Object.keys(resp.live).includes(oldKey)){
+        console.log("same")
+        req.flash("status", "Fehler: Der Channel ist gerade live")
+        res.redirect('/livestream/settings/')
+        return
+
+      }else {
+        await database.renewStreamKey(user.nickname)
+        res.redirect('/livestream/settings/')
+        return
+      }
+    } else {
+      //keiner live
+      await database.renewStreamKey(user.nickname)
+      res.redirect('/livestream/settings/')
+    }
+    
+    
+
+})
+
+router.post("/settings/offline", util.checkAuthenticated, async function(req,res) {
+
+  var user = await req.user
+  var streamKey = await database.getStreamKey(user.nickname)
+
+  req.pipe(req.busboy);
+
+  // Für jede empfangene Datei
+  req.busboy.on('file', function (fieldname, file, filename) {
+      // Schreibe die Datei auf die Festplatte
+      file.pipe(fs.createWriteStream(__dirname +"/media/live/"+streamKey+ "/"+ filename));
+  });
+
+  // Busboy hat alle Formulardaten fertig verarbeitet
+  req.busboy.on('finish', function() {
+      // Sende Antwort zum Client
+      res.send("done");
+  });
+
 })
 
 router.get("/channel/:chn", async function(req, res) {
@@ -154,19 +160,6 @@ function isEmpty(obj) {
   return Object.keys(obj).length === 0;
 }
 
-async function genThumbnails(){
 
-  var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
-  if(!isEmpty(resp))
-  Object.keys(resp.live).forEach (item => {
-    thumbnail.generateStreamThumbnail(config, item) 
-  })
- 
-}
-
-
-cron.schedule('*/1 * * * *', () => {
-  genThumbnails()
-});
 
 module.exports = router;

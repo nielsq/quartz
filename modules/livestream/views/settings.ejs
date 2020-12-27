@@ -21,6 +21,14 @@
 
 <h1>Einstellungen</h1>
 
+
+
+<% if (status) { %>
+  <%= status %>
+<% } %>
+
+<br>
+
 <div id="streamkey" style="display: none;">
 
   <p>Server: rtmp://vssUbuntu/live</p>
@@ -48,6 +56,15 @@
   <br><br>
   <input type="submit" value="Senden">
 </form>
+
+<form method="POST" action="/livestream/settings/offline" enctype="multipart/form-data">
+  <div> 
+     <label>Select your profile picture:</label> <input type="file"   name="image" />
+  </div>
+  <div> 
+      <input type="submit" name="btn_upload_profile_pic" value="Upload" /> 
+  </div>
+  </form>
 
 
 <footer>

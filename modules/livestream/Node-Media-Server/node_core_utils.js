@@ -8,8 +8,7 @@ const EventEmitter = require('events');
 const { spawn } = require('child_process');
 const readline = require('readline');
 const context = require('./node_core_ctx');
-const fs = require('fs')
-var path = require('path');
+
 
 function generateNewSessionID() {
   let sessionID = '';
@@ -89,18 +88,11 @@ function getFFmpegUrl() {
   return url;
 }
 
-function delThumbnail(StreamPath) {
 
-   var path2Thumb = 'media'+ StreamPath+ '/thumbnail.png'
-
-  fs.unlinkSync(path.join(__dirname , '../', path2Thumb))
-
-}
 
 module.exports = {
   generateNewSessionID,
   verifyAuth,
   genRandomName,
   getFFmpegVersion,
-  getFFmpegUrl,
-  delThumbnail}
+  getFFmpegUrl}

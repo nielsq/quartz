@@ -14,6 +14,7 @@ const NodeCoreUtils = require("./node_core_utils");
 const NodeFlvSession = require("./node_flv_session");
 const context = require("./node_core_ctx");
 const Logger = require("./node_core_logger");
+const ls_util = require("../ls_util");
 
 const N_CHUNK_STREAM = 8;
 const RTMP_VERSION = 3;
@@ -1236,7 +1237,9 @@ class NodeRtmpSession {
           if (playerSession instanceof NodeRtmpSession) {
             playerSession.sendStatusMessage(playerSession.playStreamId, "status", "NetStream.Play.UnpublishNotify", "stream is now unpublished.");
             playerSession.flush();
-            NodeCoreUtils.delThumbnail(this.publishStreamPath)
+            //HERE SPEZI
+            var streamkey = this.publishStreamPath.split("/");
+            ls_util.delThumbnail(streamkey[2])
           } else {
             playerSession.stop();
           }
