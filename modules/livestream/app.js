@@ -4,7 +4,7 @@ const router = express.Router();
 const database = require('./database')
 const util = require('../util');
 const fetch = require('node-fetch');
-const busboy = require('connect-busboy')
+const Busboy = require('busboy')
 const ls_util = require('./ls_util')
 const fs = require('fs')
 const flash = require('express-flash')
@@ -17,7 +17,6 @@ router.use(session({
   saveUninitialized: false
 }))
 
-router.use(busboy());
 
 
 RTMPserver.startStreamServer(ls_util.config);
@@ -64,6 +63,26 @@ router.post("/settings/", util.checkAuthenticated, async function(req, res){
 
 })
 
+router.post("/settings/thumbnails", util.checkAuthenticated, async function(req, res){
+
+
+  var user = await req.user
+
+  var offline = req.body.offline
+  var online = req.body.online
+
+  if(offline > 2  || offline < 1){
+    req.flash("status", "Fehler: 1 oder 2")
+  } else if(online > 3 || online < 1) {
+    req.flash("status", "Fehler: 1,2 oder 3")
+  } else {
+    await database.updateThumbnails(user.nickname, offline, online)
+  }
+
+  res.redirect('/livestream/settings/')
+
+})
+
 router.post("/settings/streamKey", util.checkAuthenticated, async function (req, res){
 
   var user = await req.user
@@ -98,19 +117,96 @@ router.post("/settings/offline", util.checkAuthenticated, async function(req,res
   var user = await req.user
   var streamKey = await database.getStreamKey(user.nickname)
 
-  req.pipe(req.busboy);
 
-  // Für jede empfangene Datei
-  req.busboy.on('file', function (fieldname, file, filename) {
-      // Schreibe die Datei auf die Festplatte
-      file.pipe(fs.createWriteStream(__dirname +"/media/live/"+streamKey+ "/"+ filename));
+  var busboy = new Busboy({
+    headers: req.headers,
+    limits: {
+      fileSize: 2*1024*1024
+    }
   });
 
-  // Busboy hat alle Formulardaten fertig verarbeitet
-  req.busboy.on('finish', function() {
-      // Sende Antwort zum Client
-      res.send("done");
+
+  busboy.on('file',  async function(fieldname, file, filename, encoding, mimetype) {
+    //validate against empty file fields
+
+        // validate file mimetype
+        if(mimetype != 'image/png'){
+          req.flash("status", "Fehler: Nur PNG")
+          file.resume();
+        } else {
+         
+          file.on('limit', function(){
+            fs.unlink(__dirname +"/media/live/"+streamKey+ "/"+ filename, function(){ 
+              req.flash("status", "Fehler: Max 2mb")
+             });
+            
+          });
+
+          //storing the uploaded photo
+          fstream = fs.createWriteStream(__dirname +"/media/live/"+streamKey+ "/"+ filename);
+          file.pipe(fstream);
+
+          fstream.on('close', async function() {
+            fs.rename(__dirname +"/media/live/"+streamKey+ "/"+ filename,__dirname +"/media/live/"+streamKey+ "/offline.png", (err) => {})
+          });
+        }
+
+    });
+
+    busboy.on('finish', function() {
+      res.redirect('/livestream/settings/')
+
+    });
+    return req.pipe(busboy);
+
+})
+
+router.post("/settings/live", util.checkAuthenticated, async function(req,res) {
+
+  var user = await req.user
+  var streamKey = await database.getStreamKey(user.nickname)
+
+
+  var busboy = new Busboy({
+    headers: req.headers,
+    limits: {
+      fileSize: 2*1024*1024
+    }
   });
+
+
+  busboy.on('file',  async function(fieldname, file, filename, encoding, mimetype) {
+    //validate against empty file fields
+
+        // validate file mimetype
+        if(mimetype != 'image/png'){
+          req.flash("status", "Fehler: Nur PNG")
+          file.resume();
+        } else {
+         
+          file.on('limit', function(){
+            fs.unlink(__dirname +"/media/live/"+streamKey+ "/"+ filename, function(){ 
+              req.flash("status", "Fehler: Max 2mb")
+             });
+            
+          });
+
+          //storing the uploaded photo
+          fstream = fs.createWriteStream(__dirname +"/media/live/"+streamKey+ "/"+ filename);
+          file.pipe(fstream);
+
+          fstream.on('close', async function() {
+            fs.rename(__dirname +"/media/live/"+streamKey+ "/"+ filename,__dirname +"/media/live/"+streamKey+ "/live.png", (err) => {})
+          });
+        }
+
+    });
+
+    busboy.on('finish', function() {
+      res.redirect('/livestream/settings/')
+
+    });
+    return req.pipe(busboy);
 
 })
 

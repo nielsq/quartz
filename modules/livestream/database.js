@@ -13,7 +13,7 @@ async function createChannel(name){
 
     const test = uuid.v4();
 
-    var values = "(\"" + sid + "\", \"TITLE\", \"DESCIPTION\", \"" + test + "\", 0);"
+    var values = "(\"" + sid + "\", \"TITLE\", \"DESCIPTION\", \"" + test + "\", 0, 1,1);"
     var q2 ="INSERT INTO app_livestream_channel VALUES "
     const [rows2, fields2] = await database.promisePool.query(q2 + values);
 
@@ -40,11 +40,20 @@ async function updateChannel(name, title, descrip, onlyUser){
     await database.promisePool.query(q);
 }
 
+async function updateThumbnails(name, offline, online){
+
+    var sid = (await userMod.getUserByNickname(name)).objectSid
+    var values = "chan_thumb_online="+ online + ", chan_thumb_offline=" +offline
+    var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
+
+    await database.promisePool.query(q);
+}
+
 async function getChannel(name){
 
     var sid = (await userMod.getUserByNickname(name)).objectSid
 
-    var q2 ="SELECT chan_title, chan_descrip, chan_log_on_only FROM app_livestream_channel WHERE sid = \"" + sid + "\";"
+    var q2 ="SELECT chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online FROM app_livestream_channel WHERE sid = \"" + sid + "\";"
     const [rows2, fields2] = await database.promisePool.query(q2);
 
     if(isEmpty(rows2)){
@@ -83,3 +92,4 @@ module.exports.getChannel = getChannel;
 module.exports.createChannel = createChannel;
 module.exports.updateChannel = updateChannel;
 module.exports.renewStreamKey = renewStreamKey;
+module.exports.updateThumbnails = updateThumbnails;

@@ -1,3 +1,4 @@
 *.env
 node_modules
-modules/livestream/media/*
+modules/livestream/media/live*
+modules/livestream/media/tmp*

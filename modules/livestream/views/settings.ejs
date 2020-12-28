@@ -29,6 +29,7 @@
 
 <br>
 
+<h3>Stream Einstellungen</h3>
 <div id="streamkey" style="display: none;">
 
   <p>Server: rtmp://vssUbuntu/live</p>
@@ -39,12 +40,11 @@
  </form>
 
  <br>
-
 </div>
-
-<button onclick="toggle_visibility('streamkey');">Stream Einstellungen zeigen</button>
+<button onclick="toggle_visibility('streamkey');">Anzeigen</button>
 
 <br><br>
+<h3>Channel</h3>
 
 <form id="change"action="/livestream/settings/?_method=post" method="POST">
   <label for="Title">Title:</label><br>
@@ -53,18 +53,54 @@
   <input type="text" id="descrip" name="descrip" value="<%= chn.chan_descrip %>"><br>
   <label for="loginOnly">Nur für User: </label>
   <input type="checkbox" id="loginOnly" name="loginOnly" <% if (chn.chan_log_on_only == 1 ) {%> checked <%}%>>
-  <br><br>
+  <br>
   <input type="submit" value="Senden">
 </form>
 
+<br><br>
+<h3>Thumbnails</h3>
 <form method="POST" action="/livestream/settings/offline" enctype="multipart/form-data">
-  <div> 
-     <label>Select your profile picture:</label> <input type="file"   name="image" />
-  </div>
-  <div> 
-      <input type="submit" name="btn_upload_profile_pic" value="Upload" /> 
-  </div>
-  </form>
+
+  <label>Offline Image:</label>
+  <br>
+  <input type="file"   name="image" />
+  <br>
+  <input type="submit" value="Hochladen" /> 
+
+</form>
+
+<br>
+
+<form method="POST" action="/livestream/settings/live" enctype="multipart/form-data">
+  <label>Live Image:</label>
+  <br>
+  <input type="file"   name="image" />
+  <br>
+  <input type="submit" value="Hochladen" /> 
+</form>
+
+<br>
+<br>
+
+<form action="/livestream/settings/thumbnails/?_method=post" method="POST" >
+  <label>Offline Thumbnail:</label> 
+  <select name="offline" id="offline" value="<%= chn.chan_thumb_offline %>">
+    <option value=1 <% if(chn.chan_thumb_offline== 1) {%> selected <% } %> >Default</option>
+    <option value=2 <% if(chn.chan_thumb_offline== 2) {%> selected <% } %> >Eigenes</option>
+  </select>
+  <br>
+
+  
+  <label>Live Thumbnail:</label> 
+  <select name="online" id="online">
+    <option value=1 <% if(chn.chan_thumb_online == 1) {%> selected <% } %> >Default</option>
+    <option value=2 <% if(chn.chan_thumb_online == 2) {%> selected <% } %> >Eigenes</option>
+    <option value=3 <% if(chn.chan_thumb_online == 3) {%> selected <% } %> >Auto thumbnail</option>
+  </select>
+  <br>
+  <input type="submit" value="Senden" /> 
+</form>
+<br>
 
 
 <footer>
