@@ -3,6 +3,7 @@ var ad = require('../ad');
 var database = require('../database');
 var userMod = require("../user");
 var ad = require('../ad')
+const fs = require('fs')
 
 const uuid = require('uuid');
 
@@ -12,10 +13,15 @@ async function createChannel(name){
     var sid = (await userMod.getUserByNickname(name)).objectSid
 
     const test = uuid.v4();
+     fs.mkdir(__dirname +"/media/live/"+test+ "/", (err)=>{
+         
+     })
 
     var values = "(\"" + sid + "\", \"TITLE\", \"DESCIPTION\", \"" + test + "\", 0, 1,1);"
     var q2 ="INSERT INTO app_livestream_channel VALUES "
     const [rows2, fields2] = await database.promisePool.query(q2 + values);
+
+
 
 }
 

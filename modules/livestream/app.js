@@ -9,6 +9,7 @@ const ls_util = require('./ls_util')
 const fs = require('fs')
 const flash = require('express-flash')
 const session = require('express-session')
+const { promisify } = require('util')
 
 router.use(flash())
 router.use(session({
@@ -86,9 +87,13 @@ router.post("/settings/thumbnails", util.checkAuthenticated, async function(req,
 router.post("/settings/streamKey", util.checkAuthenticated, async function (req, res){
 
   var user = await req.user
-
   var oldKey = await database.getStreamKey(user.nickname)
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
+
+  const mkdirAsync = promisify(fs.mkdir)
+  const mkdirRemane = promisify(fs.rename)
+
+
 
     if(!isEmpty(resp)){
       if(Object.keys(resp.live).includes(oldKey)){
@@ -99,13 +104,33 @@ router.post("/settings/streamKey", util.checkAuthenticated, async function (req,
 
       }else {
         await database.renewStreamKey(user.nickname)
+        var newKey = await database.getStreamKey(user.nickname)
+        await mkdirAsync(__dirname +"/media/live/"+newKey+ "/")
+        
+        fs.rename(__dirname +"/media/live/"+oldKey+ "/live.png",__dirname +"/media/live/"+newKey+ "/live.png", (err) =>{
+          fs.rename(__dirname +"/media/live/"+oldKey+ "/offline.png",__dirname +"/media/live/"+newKey+ "/offline.png", (err) =>{
+            fs.rmdir(__dirname +"/media/live/"+oldKey, (err) =>{
+
+            })
+          })
+        })
         res.redirect('/livestream/settings/')
         return
       }
     } else {
       //keiner live
       await database.renewStreamKey(user.nickname)
-      res.redirect('/livestream/settings/')
+      var newKey = await database.getStreamKey(user.nickname)
+      await mkdirAsync(__dirname +"/media/live/"+newKey+ "/")
+        
+      fs.rename(__dirname +"/media/live/"+oldKey+ "/live.png",__dirname +"/media/live/"+newKey+ "/live.png", (err) =>{
+        fs.rename(__dirname +"/media/live/"+oldKey+ "/offline.png",__dirname +"/media/live/"+newKey+ "/offline.png", (err) =>{
+          fs.rmdir(__dirname +"/media/live/"+oldKey, (err) =>{
+
+          })
+        })
+      })
+       res.redirect('/livestream/settings/')
     }
     
     
@@ -231,9 +256,11 @@ router.get("/channel/:chn", async function(req, res) {
 })
 
 router.use("/content/:chn", async function(req, res){
+
   var chn = await req.params.chn
   var key = await database.getStreamKey(chn)
   var chnDetails = await database.getChannel(chn)
+
   
   if(chnDetails[0].chan_log_on_only == 1){
     if(!req.isAuthenticated()){
@@ -242,11 +269,66 @@ router.use("/content/:chn", async function(req, res){
     }
   } 
 
-  res.sendFile(__dirname + "/media/live/" + key + req.url,  function (err) {
-    if (err) {
-      res.status(err.status).end();
+  if(req.url == "/thumbnail.png"){
+    var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
+
+    if(!isEmpty(resp)){
+      if(Object.keys(resp.live).includes(key)){
+        if(chnDetails[0].chan_thumb_online == 1){
+          res.sendFile(__dirname + "/media/default/live.png")
+        } else if (chnDetails[0].chan_thumb_online == 2){
+          res.sendFile(__dirname + "/media/live/" + key + "/live.png", (err)=>{
+            if (err) {
+              res.sendFile(__dirname + "/media/default/live.png")
+            }
+          })
+        } else if (chnDetails[0].chan_thumb_online == 3){
+          res.sendFile(__dirname + "/media/live/" + key + "/thumbnail.png", (err)=>{
+            if (err) {
+              res.sendFile(__dirname + "/media/live/" + key + "/live.png", (err)=>{
+                if (err) {
+                  res.sendFile(__dirname + "/media/default/live.png")
+                }
+              })
+            }
+              
+          })
+        }
+        
+      } else {
+        if(chnDetails[0].chan_thumb_offline == 1){
+          res.sendFile(__dirname + "/media/live/" + key + "/offline.png", (err)=>{
+            if (err) {
+              res.sendFile(__dirname + "/media/default/offline.png")
+            }
+          })
+        } else {
+          res.sendFile(__dirname + "/media/default/offline.png")
+        }
+        
+      }
+    } else {
+      if(chnDetails[0].chan_thumb_offline == 1){
+        res.sendFile(__dirname + "/media/default/offline.png")
+      } else {
+        
+        res.sendFile(__dirname + "/media/live/" + key + "/offline.png", (err)=>{
+          if (err) {
+            res.sendFile(__dirname + "/media/default/offline.png")
+          }
+        })
+      }
     }
-  });
+    
+  } else {
+    res.sendFile(__dirname + "/media/live/" + key + req.url,  function (err) {
+      if (err) {
+        res.status(err.status).end();
+      }
+    });
+  }
+
+
 
 })
 
