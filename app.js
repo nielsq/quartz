@@ -10,6 +10,8 @@ const initializePassport = require('./passport-config')
 const placeholder = require('./modules/placeholder');
 const database = require('./modules/database');
 const livestream = require('./modules/livestream/app');
+const fs = require('fs')
+const https = require('https');
 
 
 initializePassport(passport)
@@ -71,8 +73,15 @@ app.use('/livestream', livestream);
 
 app.use('/content', express.static(__dirname + '/content'));
 
-app.listen(3000)
 
+var privateKey = fs.readFileSync( 'cert.key' );
+var certificate = fs.readFileSync( 'cert.crt' );
+
+
+https.createServer({
+  key: privateKey,
+  cert: certificate
+}, app).listen(443);
 
 function checkAuthenticated(req, res, next) {
   if (req.isAuthenticated()) {

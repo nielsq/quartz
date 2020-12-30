@@ -241,6 +241,15 @@ router.get("/channel/:chn", async function(req, res) {
   var channel = await database.getChannel(chn)
   var user = await req.user
   var same
+  var live = false;
+  var key = await database.getStreamKey(chn)
+  var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
+
+    if(!isEmpty(resp)){
+      if(Object.keys(resp.live).includes(key)){
+        var live = true;
+      }
+    }
 
   if(user){
     if(user.nickname == chn){
@@ -251,7 +260,7 @@ router.get("/channel/:chn", async function(req, res) {
   }
   
 
-  res.render('channel.ejs', { name:chn, chn: channel[0], page:"livestream", user:user, same:same})
+  res.render('channel.ejs', { name:chn, chn: channel[0], page:"livestream", user:user, same:same, live:live})
   
 })
 

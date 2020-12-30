@@ -471,7 +471,7 @@ body.vjs-full-window {
 .vjs-no-js a:visited {
   color: #66A8CC;
 }
-
+/*
 .video-js .vjs-big-play-button {
   font-size: 3em;
   line-height: 1.5em;
@@ -490,6 +490,23 @@ body.vjs-full-window {
   border-radius: 0.3em;
   transition: all 0.4s;
 }
+*/
+
+.video-js .vjs-big-play-button .vjs-icon-placeholder:before {
+  content: "";
+  background-image: url('/livestream/player/play.png');
+  background-repeat: no-repeat;
+  background-size: 46px;
+  background-position: 55% calc(50% - 0px);
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.vjs-paused.vjs-has-started .vjs-big-play-button {
+  display: block;
+}
+
+
 .vjs-big-play-centered .vjs-big-play-button {
   top: 50%;
   left: 50%;
@@ -544,6 +561,8 @@ body.vjs-full-window {
   top: 0.5em;
   z-index: 2;
 }
+
+/* Fade */
 .video-js .vjs-modal-dialog {
   background: rgba(0, 0, 0, 0.8);
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.8), rgba(255, 255, 255, 0));
@@ -1331,6 +1350,7 @@ video::-webkit-media-text-track-display {
   vertical-align: middle;
   width: 100%;
 }
+
 
 .vjs-loading-spinner {
   display: none;
