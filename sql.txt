@@ -1,4 +1,6 @@
 DROP DATABASE quartz;
+DROP DATABASE sessions;
+CREATE DATABASE sessions;
 CREATE DATABASE quartz;
 USE quartz;
 

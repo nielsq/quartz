@@ -91,11 +91,8 @@ router.post("/settings/streamKey", util.checkAuthenticated, async function (req,
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
 
   const mkdirAsync = promisify(fs.mkdir)
-  const mkdirRemane = promisify(fs.rename)
-
-
-
-    if(!isEmpty(resp)){
+  
+    if(!ls_util.isEmpty(resp)){
       if(Object.keys(resp.live).includes(oldKey)){
         console.log("same")
         req.flash("status", "Fehler: Der Channel ist gerade live")
@@ -245,7 +242,7 @@ router.get("/channel/:chn", async function(req, res) {
   var key = await database.getStreamKey(chn)
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
 
-    if(!isEmpty(resp)){
+    if(!ls_util.isEmpty(resp)){
       if(Object.keys(resp.live).includes(key)){
         var live = true;
       }
@@ -281,7 +278,7 @@ router.use("/content/:chn", async function(req, res){
   if(req.url == "/thumbnail.png"){
     var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
 
-    if(!isEmpty(resp)){
+    if(!ls_util.isEmpty(resp)){
       if(Object.keys(resp.live).includes(key)){
         if(chnDetails[0].chan_thumb_online == 1){
           res.sendFile(__dirname + "/media/default/live.png")
@@ -342,11 +339,6 @@ router.use("/content/:chn", async function(req, res){
 })
 
 router.use('/player', express.static(__dirname + '/player'));
-
-function isEmpty(obj) {
-  return Object.keys(obj).length === 0;
-}
-
 
 
 module.exports = router;

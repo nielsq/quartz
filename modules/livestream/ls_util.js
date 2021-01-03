@@ -88,3 +88,4 @@ function isEmpty(obj) {
 
   module.exports.delThumbnail = delThumbnail;
   module.exports.config = config;
+  module.exports.isEmpty = isEmpty;

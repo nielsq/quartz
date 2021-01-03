@@ -2,3 +2,5 @@
 node_modules
 modules/livestream/media/live*
 modules/livestream/media/tmp*
+*.crt
+*.key

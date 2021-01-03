@@ -1,3 +1,4 @@
+const connect = require("passport/lib/framework/connect")
 
  exports.checkAuthenticated= function(req, res, next) {
     if (req.isAuthenticated()) {
@@ -13,5 +14,3 @@
     }
     next()
   }
-
-  
