@@ -14,7 +14,7 @@ const NodeCoreUtils = require("./node_core_utils");
 const NodeFlvSession = require("./node_flv_session");
 const context = require("./node_core_ctx");
 const Logger = require("./node_core_logger");
-const ls_util = require("../ls_util");
+const utils = require("../modules/util");
 
 const N_CHUNK_STREAM = 8;
 const RTMP_VERSION = 3;
@@ -1239,7 +1239,7 @@ class NodeRtmpSession {
             playerSession.flush();
             //HERE SPEZI
             var streamkey = this.publishStreamPath.split("/");
-            ls_util.delThumbnail(streamkey[2])
+            utils.delThumbnail(streamkey[2])
           } else {
             playerSession.stop();
           }

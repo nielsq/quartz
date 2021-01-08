@@ -35,7 +35,7 @@
   <p>Server: rtmp://vssUbuntu/live</p>
   <p>Streamkey: <%= Skey %></p>
 
- <form id="Renew"action="/livestream/settings/streamKey/?_method=post" method="POST">
+ <form id="Renew"action="/settings/streamKey/?_method=post" method="POST">
   <input type="submit" value="Neu erstellen">
  </form>
 
@@ -46,7 +46,7 @@
 <br><br>
 <h3>Channel</h3>
 
-<form id="change"action="/livestream/settings/?_method=post" method="POST">
+<form id="change"action="/settings/?_method=post" method="POST">
   <label for="Title">Title:</label><br>
   <input type="text" id="Title" name="Title" value="<%= chn.chan_title %>"><br>
   <label for="descrip">Beschreibung:</label><br>
@@ -59,7 +59,7 @@
 
 <br><br>
 <h3>Thumbnails</h3>
-<form method="POST" action="/livestream/settings/offline" enctype="multipart/form-data">
+<form method="POST" action="/settings/offline" enctype="multipart/form-data">
 
   <label>Offline Image:</label>
   <br>
@@ -71,7 +71,7 @@
 
 <br>
 
-<form method="POST" action="/livestream/settings/live" enctype="multipart/form-data">
+<form method="POST" action="/settings/live" enctype="multipart/form-data">
   <label>Live Image:</label>
   <br>
   <input type="file"   name="image" />
@@ -82,7 +82,7 @@
 <br>
 <br>
 
-<form action="/livestream/settings/thumbnails/?_method=post" method="POST" >
+<form action="/settings/thumbnails/?_method=post" method="POST" >
   <label>Offline Thumbnail:</label> 
   <select name="offline" id="offline" value="<%= chn.chan_thumb_offline %>">
     <option value=1 <% if(chn.chan_thumb_offline== 1) {%> selected <% } %> >Default</option>

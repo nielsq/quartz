@@ -2,6 +2,9 @@
 var mysql = require('mysql2');
 var ad = require('./ad')
 const uuid = require('uuid');
+var mysql = require('mysql2');
+var userMod = require("./user");
+const fs = require('fs')
 
 
 
@@ -92,6 +95,86 @@ async function createUser(sid) {
     return true;
   }
 
+  async function createChannel(name){
+
+    var sid = (await userMod.getUserByNickname(name)).objectSid
+
+    const test = uuid.v4();
+     fs.mkdir(__dirname +"/media/live/"+test+ "/", (err)=>{
+         
+     })
+
+    var values = "(\"" + sid + "\", \"TITLE\", \"DESCIPTION\", \"" + test + "\", 0, 1,1);"
+    var q2 ="INSERT INTO app_livestream_channel VALUES "
+    const [rows2, fields2] = await promisePool.query(q2 + values);
+
+
+
+}
+
+async function renewStreamKey(name){
+    
+    const newUUID = uuid.v4();
+
+    var sid = (await userMod.getUserByNickname(name)).objectSid
+    var values = "chan_key=\""+newUUID+ "\""
+    var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
+
+    await promisePool.query(q);
+
+}
+
+async function updateChannel(name, title, descrip, onlyUser){
+
+    var sid = (await userMod.getUserByNickname(name)).objectSid
+    var values = "chan_title=\""+title+ "\", chan_descrip=\""+descrip+"\" ,chan_log_on_only=\""+ onlyUser + "\" "
+    var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
+
+    await promisePool.query(q);
+}
+
+async function updateThumbnails(name, offline, online){
+
+    var sid = (await userMod.getUserByNickname(name)).objectSid
+    var values = "chan_thumb_online="+ online + ", chan_thumb_offline=" +offline
+    var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
+
+    await promisePool.query(q);
+}
+
+async function getChannel(name){
+
+    var sid = (await userMod.getUserByNickname(name)).objectSid
+
+    var q2 ="SELECT chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online FROM app_livestream_channel WHERE sid = \"" + sid + "\";"
+    const [rows2, fields2] = await promisePool.query(q2);
+
+    if(isEmpty(rows2)){
+
+        ad.getUserById(sid)
+
+        if(isEmpty(ad)){
+            return false;
+        } else {
+            await createChannel(name)
+            return (await getChannel(name))
+        }
+
+    } else {
+        return rows2
+    }
+
+}
+
+async function getStreamKey(name){
+
+    var sid = (await userMod.getUserByNickname(name)).objectSid
+    var q2 ="SELECT chan_key from app_livestream_channel WHERE sid = \""+ sid + "\";"
+    const [rows2, fields2] = await promisePool.query(q2);
+
+    return rows2[0].chan_key
+}
+
   function isEmpty(obj) {
     return Object.keys(obj).length === 0;
   }
@@ -100,4 +183,9 @@ async function createUser(sid) {
   module.exports.createUser = createUser;
   module.exports.getActivModules = getActivModules;
   module.exports.addModule = addModule;
-  module.exports.promisePool = promisePool;
+  module.exports.renewStreamKey = renewStreamKey;
+  module.exports.createChannel = createChannel;
+  module.exports.updateChannel = updateChannel;
+  module.exports.updateThumbnails = updateThumbnails;
+  module.exports.getChannel = getChannel;
+  module.exports.getStreamKey = getStreamKey;

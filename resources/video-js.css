@@ -494,7 +494,7 @@ body.vjs-full-window {
 
 .video-js .vjs-big-play-button .vjs-icon-placeholder:before {
   content: "";
-  background-image: url('/livestream/player/play.png');
+  background-image: url('/resources/play.png');
   background-repeat: no-repeat;
   background-size: 46px;
   background-position: 55% calc(50% - 0px);

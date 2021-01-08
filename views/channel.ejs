@@ -23,12 +23,12 @@
   <% } %>
 
 
-  <link href="/livestream/player/video-js.css" rel="stylesheet">
-  <script src="/livestream/player/video.min.js"></script>
+  <link href="/resources/video-js.css" rel="stylesheet">
+  <script src="/resources/video.min.js"></script>
 
-  <video-js id=vid1 width=600 height=300 class="vjs-default-skin" controls poster='/livestream/content/<%=name%>/thumbnail.png' >
+  <video-js id=vid1 width=600 height=300 class="vjs-default-skin" controls poster='/content/<%=name%>/thumbnail.png' >
     <source
-        src="/livestream/content/<%=name%>/index.m3u8",
+        src="/content/<%=name%>/index.m3u8",
     type="application/x-mpegURL"> 
   </video-js>
   
@@ -68,7 +68,7 @@
   <% }%>
 
 <% if(same){ %>
-  <a href="/livestream/settings" > Einstellungen</a>
+  <a href="/settings" > Einstellungen</a>
   <% } %>
 
 

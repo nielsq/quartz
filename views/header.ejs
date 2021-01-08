@@ -59,8 +59,7 @@
 <div class="header">
   <a href="#default" class="logo">QUARTZ</a>
   <div class="header-right">
-    <a <% if(page == "dashboard") { %> class="active" <% } %>  href="/dashboard">Dashboard</a>
-    <a <% if(page == "livestream") { %> class="active" <% } %> href="/livestream">Livestream</a>
+    <a <% if(page == "home") { %> class="active" <% } %>  href="/">Home</a>
      <% if(user) { %> <a href="#" onclick="logout();">Logout</a> <% } else { %> <a <% if(page == "login") { %> class="active" <% } %> href="/login">Login</a><% } %>
     
   </div>
