@@ -1,6 +1,6 @@
 *.env
 node_modules
-modules/livestream/media/live*
-modules/livestream/media/tmp*
+media/live*
+media/tmp*
 *.crt
 *.key

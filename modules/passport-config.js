@@ -1,6 +1,6 @@
 const LocalStrategy = require('passport-local').Strategy
-var ad = require('./modules/ad')
-var userMod = require("./modules/user");
+var ad = require('./ad')
+var userMod = require("./user");
 
 function initialize(passport) {
   const authenticateUser = async (name, passpord, done) => {
@@ -26,8 +26,5 @@ function initialize(passport) {
     return done(null, userMod.getUserBySID(id))
   })
 }
-
-
-
 
 module.exports = initialize

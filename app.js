@@ -10,7 +10,7 @@ const passport = require('passport')
 const flash = require('express-flash')
 const session = require('express-session')
 const methodOverride = require('method-override')
-const initializePassport = require('./passport-config')
+const initializePassport = require('./modules/passport-config')
 const database = require('./modules/database');
 const fs = require('fs')
 const https = require('https');
@@ -48,7 +48,7 @@ const sessionStore = new MySQLStore({
 
 initializePassport(passport)
 
-app.set('view-engine', 'ejs')
+
 
 app.use(express.urlencoded({
   extended: false
@@ -64,10 +64,11 @@ app.use(passport.initialize())
 app.use(passport.session())
 app.use(methodOverride('_method'))
 app.set('views');
-
+app.set('view-engine', 'ejs')
 
 //SocketIO
 const io = require('socket.io')(server);
+var numClients = {};
 
 io.use(passportSocketIo.authorize({
 
@@ -79,10 +80,24 @@ io.use(passportSocketIo.authorize({
   fail:         onAuthorizeFail,
 }));
 
-io.on("connection", async function(socket){
-  console.log("HELLO")
-        
-});
+io.on('connection', function (socket) {
+  
+  socket.on('join', function (room) {
+      socket.join(room);
+      socket.room = room;
+      if (numClients[room] == undefined) {
+          numClients[room] = 1;
+      } else {
+          numClients[room]++;
+      }
+  });
+  
+  socket.on('disconnect', function () {
+
+    numClients[socket.room]--;
+  });
+})
+
 
 function onAuthorizeSuccess(data, accept){
 
@@ -342,6 +357,21 @@ app.get("/channel/:chn", async function(req, res) {
   
 
   res.render('channel.ejs', { name:chn, chn: channel[0], page:"livestream", user:user, same:same, live:live})
+  
+})
+
+app.get("/viewer/:chn", async function(req, res) {
+ 
+  await new Promise(r => setTimeout(r, 50));
+
+  const chn = req.params.chn
+  var viewer = numClients[chn]
+  if (viewer === undefined ){
+    res.send("Viewer: 0 ")
+  } else {
+    res.send("Viewer: " + viewer)
+  }
+
   
 })
 

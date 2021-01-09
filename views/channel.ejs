@@ -32,18 +32,18 @@
     type="application/x-mpegURL"> 
   </video-js>
   
-  
-  <script>
 
+  <script>
+    //socketIO
+    var socket = io();
+    socket.emit('join', "<%=name%>");
+  </script>
+
+  <script>
+    //player
     var player = videojs('vid1');
 
-    if(<%=live%>){
-      console.log("LIVE <%= live%>")
-      
-
-
-    } else {
-      console.log("Offline")
+    if(!<%=live%>){
       player.bigPlayButton.hide();
       player.errorDisplay.dispose();
 
@@ -59,12 +59,35 @@
     //autoplay?
     //player.play();
 
-  
+  </script>
+
+  <script>
+    const url='https://vssubuntu/viewer/<%=name%>'
+
+    httpGetAsync(url, (data)=>{
+      console.log(data)
+      document.getElementById("viewer").innerHTML = data;
+    }
+
+    )
+    function httpGetAsync(theUrl, callback) {
+
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.onreadystatechange = function() { 
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText);
+      }
+
+      xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+      xmlHttp.send(null);
+    }
 
   </script>
 
-  <p> DESCIPTION <%= chn.chan_descrip %></p>
 
+
+  <p > DESCIPTION <%= chn.chan_descrip %></p>
+  <p id="viewer" ></p>
   <% }%>
 
 <% if(same){ %>
