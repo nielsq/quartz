@@ -33,11 +33,7 @@
   </video-js>
   
 
-  <script>
-    //socketIO
-    var socket = io();
-    socket.emit('join', "<%=name%>");
-  </script>
+
 
   <script>
     //player
@@ -61,15 +57,10 @@
 
   </script>
 
-  <script>
-    const url='https://vssubuntu/viewer/<%=name%>'
+  <script async type="module">
 
-    httpGetAsync(url, (data)=>{
-      console.log(data)
-      document.getElementById("viewer").innerHTML = data;
-    }
-
-    )
+  await sleep(1000)
+  loadViewer()
     function httpGetAsync(theUrl, callback) {
 
       var xmlHttp = new XMLHttpRequest();
@@ -82,8 +73,24 @@
       xmlHttp.send(null);
     }
 
-  </script>
+    function sleep(milliseconds) {
+      return new Promise(resolve => setTimeout(resolve, milliseconds));
+    }
 
+    async function loadViewer(){
+      
+      const url='https://vssubuntu/viewer/<%=name%>'
+
+      httpGetAsync(url, (data)=>{
+        console.log(data)
+        document.getElementById("viewer").innerHTML = data;
+      })
+
+      await sleep(15000)
+
+      loadViewer()
+    }
+  </script>
 
 
   <p > DESCIPTION <%= chn.chan_descrip %></p>
@@ -91,9 +98,51 @@
   <% }%>
 
 <% if(same){ %>
-  <a href="/settings" > Einstellungen</a>
-  <% } %>
 
+  
+  <a href="/settings" > Einstellungen</a>
+
+  <script>
+    //socketIO
+    var socket = io();
+    socket.emit('join', "<%=name%>");
+    socket.on("chat message", (data) =>{
+      console.log("chat message" + data);
+    })
+
+
+  </script>
+
+
+  <% } else { %>
+    <div id="sendbottom">
+      <input type="text" id="msg">
+      <input type="button" id="send" value="send">
+    </div>
+
+    <script>
+      //socketIO
+      var socket = io();
+      socket.emit('join', "<%=name%>");
+  
+      var btn = document.getElementById("send");
+  
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+  
+        var msg2send = document.getElementById('msg').value;
+        document.getElementById('msg').value = '';
+        console.log("sending: " + msg2send)
+        socket.emit('chat message', msg2send);
+      })
+  
+    </script>
+
+
+    <% } %>
+
+
+    
 
 <footer>
     <%- include('./footer'); %>

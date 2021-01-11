@@ -19,7 +19,8 @@ const utils = require('./modules/util');
 const passportSocketIo = require("passport.socketio");
 const { connect } = require('./modules/placeholder');
 const MySQLStore = require('express-mysql-session')(session)    
-const connect2 = require("passport/lib/framework/connect")
+const connect2 = require("passport/lib/framework/connect");
+const { countBy } = require('lodash');
 
 
 //80 -> 443
@@ -69,6 +70,7 @@ app.set('view-engine', 'ejs')
 //SocketIO
 const io = require('socket.io')(server);
 var numClients = {};
+var authSockets = {};
 
 io.use(passportSocketIo.authorize({
 
@@ -80,8 +82,32 @@ io.use(passportSocketIo.authorize({
   fail:         onAuthorizeFail,
 }));
 
-io.on('connection', function (socket) {
+io.on('connection', async function (socket) {
+
   
+  var user = await socket.request.user
+
+  if(user.logged_in  == false){
+
+  } else if (user.nickname){
+    console.log("Auth user connected")
+    var ary = [];
+    if(!authSockets[user.nickname]){
+
+      ary[0] = socket.id
+
+      authSockets[user.nickname] = ary
+
+    } else {
+
+      ary = authSockets[user.nickname]
+      ary[ary.length] = socket.id
+      authSockets[user.nickname] = ary
+
+    }
+    
+  } 
+
   socket.on('join', function (room) {
       socket.join(room);
       socket.room = room;
@@ -95,7 +121,34 @@ io.on('connection', function (socket) {
   socket.on('disconnect', function () {
 
     numClients[socket.room]--;
+
+    console.log("bye: " + socket.id)
+
+    //need to remove SocketID from authSockets
+
+    
+    
   });
+  
+  socket.on('chat message', async function (msg) {
+    var user = await socket.request.user;
+
+    //test msgs
+    var socketIDS = []
+    socketIDS = authSockets[socket.room]
+    
+    socketIDS.forEach(element => {
+      console.log("send msg to "+element)
+      socket.to(element).emit("chat message", msg )
+    });
+    
+
+     // 
+
+   
+
+  });
+
 })
 
 
@@ -159,7 +212,7 @@ app.post("/settings", utils.checkAuthenticated, async function(req, res){
   await database.updateChannel(user.nickname, title, descrip, loginOnly)
 
   
-  res.redirect('/livestream/channel/' + user.nickname)
+  res.redirect('/channel/' + user.nickname)
 
 })
 
@@ -179,7 +232,7 @@ app.post("/settings/thumbnails", utils.checkAuthenticated, async function(req, r
     await database.updateThumbnails(user.nickname, offline, online)
   }
 
-  res.redirect('/livestream/settings/')
+  res.redirect('/settings/')
 
 })
 
@@ -362,8 +415,6 @@ app.get("/channel/:chn", async function(req, res) {
 
 app.get("/viewer/:chn", async function(req, res) {
  
-  await new Promise(r => setTimeout(r, 50));
-
   const chn = req.params.chn
   var viewer = numClients[chn]
   if (viewer === undefined ){
