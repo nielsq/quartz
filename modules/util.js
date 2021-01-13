@@ -100,10 +100,22 @@ function isEmpty(obj) {
     return Object.keys(obj).length === 0;
 }
 
+function removeItemOnce(arr, value) {
+  var index = arr.indexOf(value);
+  if (index > -1) {
+    console.log("removed")
+    arr.splice(index, 1);
+  }
+  return arr;
+}
+
+
 module.exports.config = config;
   module.exports.delThumbnail = delThumbnail;
   module.exports.isEmpty = isEmpty;
   module.exports.checkAuthenticated = checkAuthenticated;
   module.exports.checkNotAuthenticated = checkNotAuthenticated;
+  module.exports.removeItemOnce = removeItemOnce;
+  
   
 

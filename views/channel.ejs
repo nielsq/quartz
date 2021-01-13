@@ -3,42 +3,35 @@
 <head>
 
   <%- include('./head'); %>
+  <script src="https://unpkg.com/socket.io-client@3.0.1/dist/socket.io.min.js"></script>
+  <link rel="stylesheet" href="/resources/chat.css">
 </head>
-
+<body>
 
 <header>
   <%- include('./header'); %>
 </header>
 
-<h1>Channel von: <%= name %></h1>
 
 <% if (chn.chan_log_on_only == 1 && !user) { %>
     <p>Bitte Loggen Sie sich ein um den Stream zu sehen</p>
 <% } else {%>
-  <h1><%= chn.chan_title %></h1>
+  
 
-  <br>
-  <% if (!live) { %>
-    <p>Offline</p>
-  <% } %>
-
-
+<div id="livestreamPlayer">
   <link href="/resources/video-js.css" rel="stylesheet">
   <script src="/resources/video.min.js"></script>
 
-  <video-js id=vid1 width=600 height=300 class="vjs-default-skin" controls poster='/content/<%=name%>/thumbnail.png' >
+  <video-js id=vid1  class="vjs-default-skin" controls poster='/content/<%=name%>/thumbnail.png' >
     <source
         src="/content/<%=name%>/index.m3u8",
     type="application/x-mpegURL"> 
   </video-js>
-  
-
-
 
   <script>
     //player
     var player = videojs('vid1');
-
+    player.fluid(true);
     if(!<%=live%>){
       player.bigPlayButton.hide();
       player.errorDisplay.dispose();
@@ -57,92 +50,137 @@
 
   </script>
 
-  <script async type="module">
+</div>
 
-  await sleep(1000)
-  loadViewer()
-    function httpGetAsync(theUrl, callback) {
+<div id="StreamInfos">
+  <h2><%= chn.chan_title %></h2>
+  <p> <b><%= name %>: </b >DESCIPTION <%= chn.chan_descrip %></p>
 
-      var xmlHttp = new XMLHttpRequest();
-      xmlHttp.onreadystatechange = function() { 
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-            callback(xmlHttp.responseText);
-      }
+    <% if (!live) { %>
+      <p>Offline</p>
+    <% } else {%>
+        <script async type="module">
+    
+          await sleep(1000)
+          loadViewer()
+            function httpGetAsync(theUrl, callback) {
+        
+              var xmlHttp = new XMLHttpRequest();
+              xmlHttp.onreadystatechange = function() { 
+                if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                    callback(xmlHttp.responseText);
+              }
+        
+              xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+              xmlHttp.send(null);
+            }
+        
+            function sleep(milliseconds) {
+              return new Promise(resolve => setTimeout(resolve, milliseconds));
+            }
+        
+            async function loadViewer(){
+              
+              const url='https://vssubuntu/viewer/<%=name%>'
+        
+              httpGetAsync(url, (data)=>{
+                console.log(data)
+                document.getElementById("viewer").innerHTML = data;
+              })
+        
+              await sleep(15000)
+        
+              loadViewer()
+            }
+        </script>
+    
+        <p id="viewer"></p>
+       
+    
+    <% } %>
+</div>
 
-      xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-      xmlHttp.send(null);
-    }
-
-    function sleep(milliseconds) {
-      return new Promise(resolve => setTimeout(resolve, milliseconds));
-    }
-
-    async function loadViewer(){
-      
-      const url='https://vssubuntu/viewer/<%=name%>'
-
-      httpGetAsync(url, (data)=>{
-        console.log(data)
-        document.getElementById("viewer").innerHTML = data;
-      })
-
-      await sleep(15000)
-
-      loadViewer()
-    }
-  </script>
 
 
-  <p > DESCIPTION <%= chn.chan_descrip %></p>
-  <p id="viewer" ></p>
-  <% }%>
+<p id="chat"></p>
 
-<% if(same){ %>
+  <% if(same){ %>
 
+   <!-- Neuer Chat-->
+   <div class="chatcontainer">
+	  <ul class="chat">
+		  <li class="message">
+        <span class="username">User:</span> Message4, fdskalfjdlisa jfkdlsajfds i</li>
+		  <li class="message">
+        <span class="username">User:</span> Message3</li>
+		  <li class="message">
+        <span class="username">User:</span> Message1</li>
+		  <li class="message">
+      <span class="username">User:</span> Message2</li>
+    </ul>
+  </div>
+    <!-- Alter Chat-->
+    <ul id="chatList">
   
-  <a href="/settings" > Einstellungen</a>
-
-  <script>
-    //socketIO
-    var socket = io();
-    socket.emit('join', "<%=name%>");
-    socket.on("chat message", (data) =>{
-      console.log("chat message" + data);
-    })
-
-
-  </script>
-
-
-  <% } else { %>
-    <div id="sendbottom">
-      <input type="text" id="msg">
-      <input type="button" id="send" value="send">
-    </div>
-
+    </ul>
+    <a href="/settings" > Einstellungen</a>
+  
     <script>
       //socketIO
       var socket = io();
       socket.emit('join', "<%=name%>");
+      socket.on("chat message", (data) =>{  
   
-      var btn = document.getElementById("send");
+        var node = document.createElement("LI");
+        var textnode = document.createTextNode(data);
+        node.appendChild(textnode);
+        document.getElementById("chatList").appendChild(node);
   
-      btn.addEventListener('click', e => {
-        e.preventDefault()
-  
-        var msg2send = document.getElementById('msg').value;
-        document.getElementById('msg').value = '';
-        console.log("sending: " + msg2send)
-        socket.emit('chat message', msg2send);
       })
   
     </script>
+  
 
-
-    <% } %>
-
-
+  
+    <% } else { %>
+      <div id="sendbottom">
+        <input type="text" id="msg">
+        <input type="button" id="send" value="send">
+      </div>
+  
+      <script>
+        //socketIO
+        var socket = io();
+        socket.emit('join', "<%=name%>");
+        socket.on("status", (data) =>{  
+          
+          console.log("DATA" + data.asw)
+          if(data.success){
+            document.getElementById("chat").innerHTML = data.asw;
+            document.getElementById('msg').value = '';
+          } else {
+            
+            document.getElementById("chat").innerHTML = data.asw;
+          }
+          
+        })
     
+        var btn = document.getElementById("send");
+    
+        btn.addEventListener('click', e => {
+          e.preventDefault()
+    
+          var msg2send = document.getElementById('msg').value;
+          
+          console.log("sending: " + msg2send)
+          socket.emit('chat message', msg2send);
+        })
+
+      </script>
+
+      <% } %>
+
+  <% }%>
 
 <footer>
     <%- include('./footer'); %>

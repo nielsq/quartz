@@ -84,31 +84,7 @@ io.use(passportSocketIo.authorize({
 
 io.on('connection', async function (socket) {
 
-  
-  var user = await socket.request.user
-
-  if(user.logged_in  == false){
-
-  } else if (user.nickname){
-    console.log("Auth user connected")
-    var ary = [];
-    if(!authSockets[user.nickname]){
-
-      ary[0] = socket.id
-
-      authSockets[user.nickname] = ary
-
-    } else {
-
-      ary = authSockets[user.nickname]
-      ary[ary.length] = socket.id
-      authSockets[user.nickname] = ary
-
-    }
-    
-  } 
-
-  socket.on('join', function (room) {
+  socket.on('join', async function (room) {
       socket.join(room);
       socket.room = room;
       if (numClients[room] == undefined) {
@@ -116,37 +92,76 @@ io.on('connection', async function (socket) {
       } else {
           numClients[room]++;
       }
+
+      var user = await socket.request.user
+
+      if(user.logged_in  == false){
+    
+      } else if (user.nickname){
+        console.log("Adding "+ user.nickname + " with " + socket.id + " to AuthClients")
+        var ary = [];
+        if(!authSockets[user.nickname]){
+    
+          ary[0] = socket.id
+    
+          authSockets[user.nickname] = ary
+    
+        } else {
+    
+          ary = authSockets[user.nickname]
+          ary[ary.length] = socket.id
+          authSockets[user.nickname] = ary
+    
+        }
+        
+      } 
   });
   
   socket.on('disconnect', function () {
 
     numClients[socket.room]--;
 
-    console.log("bye: " + socket.id)
+    console.log("bye: " + socket.id + " form room " + socket.room)
 
-    //need to remove SocketID from authSockets
+    if(socket.room){
 
-    
-    
+      var socketIDS = []
+      socketIDS = authSockets[socket.room]
+      
+        console.log("removing form Auth clients")
+        utils.removeItemOnce(socketIDS, socket.id)
+
+    }
+
+
   });
   
   socket.on('chat message', async function (msg) {
     var user = await socket.request.user;
+    var chn = await database.getChannel([socket.room])
 
-    //test msgs
-    var socketIDS = []
-    socketIDS = authSockets[socket.room]
-    
-    socketIDS.forEach(element => {
-      console.log("send msg to "+element)
-      socket.to(element).emit("chat message", msg )
-    });
-    
+    if(msg.length > 280){
+      io.to(socket.id).emit("status", {success: false, asw: "Maximal 280 zeichen"} )
+    } else if (!user.nickname && chn[0].chan_log_on_only == 1 ){
+      io.to(socket.id).emit("status", {success: false, asw: "User only"} )
+    } else {
+      io.to(socket.id).emit("status", {success: true, asw: "Danke für die Nachricht"} )
 
-     // 
-
+      var socketIDS = []
+      socketIDS = authSockets[socket.room]
+      
+  
+      socketIDS.forEach(element => {
+        if(user.nickname){
+          socket.to(element).emit("chat message", (user.nickname + ": " + msg) )
+        } else {
+          socket.to(element).emit("chat message", ("Gast: " + msg) )
+        }
+        
+      });
+    }
    
-
+    
   });
 
 })

@@ -9,7 +9,7 @@ generateStreamThumbnail = (config, stream_key) => {
         '-ss', '00:00:01',
         '-vframes', '1',
         '-vf', 'scale=-2:300',
-        './modules/livestream/media/live/'+stream_key+'/thumbnail.png',
+        './media/live/'+stream_key+'/thumbnail.png',
     ];
 
     const child = spawn(config.trans.ffmpeg, args, {
