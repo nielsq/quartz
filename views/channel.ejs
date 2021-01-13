@@ -101,84 +101,115 @@
 </div>
 
 
+<div class="chat">
 
-<p id="chat"></p>
+  <% if (chn.chan_chat == 1 ) { %>
+    <p>chat deaktiviert</p>
+  <% } else if (chn.chan_chat == 2 )  {%>
+    <div id="sendbottom">
+      <input type="text" id="msg">
+      <input type="button" id="send" value="send">
+      <p id="sendStatus"></p>
+    </div>
+  <% } else if (chn.chan_chat == 3 && !user)  {%>
+    <p>chat deaktiviert, bitte einloggen</p>
+  <% } else if (chn.chan_chat == 3 && user && !same)  {%>
+    <div id="sendbottom">
+      <input type="text" id="msg">
+      <input type="button" id="send" value="send">
+      <p id="sendStatus"></p>
+    </div>
+  <% } else if ((chn.chan_chat == 3 || chn.chan_chat == 2) && same)  {%>
+    <div class="chatcontainer">
+      <p>Chat:</p>
+      <ul id="chatlist" class="chat" >
+      </ul>
+    </div>
+  <% } else if (chn.chan_chat == 4 )  {%>
+    <div class="chatcontainer">
+      <p>Chat:</p>
+      <ul id="chatlist" class="chat" >
+      </ul>
+    </div>
+    <div id="sendbottom">
+      <input type="text" id="msg">
+      <input type="button" id="send" value="send">
+      <p id="sendStatus"></p>
+    </div>
+      
+  <% } else if (chn.chan_chat == 5 && !user)  {%>
+    <p>chat deaktiviert, bitte einloggen</p>
+  <% } else if (chn.chan_chat == 5 && user)  {%>
+    <div class="chatcontainer">
+      <p>Chat:</p>
+      <ul id="chatlist" class="chat" >
+      </ul>
+    </div>
+    <div id="sendbottom">
+      <input type="text" id="msg">
+      <input type="button" id="send" value="send">
+      <p id="sendStatus"></p>
+    </div>
+  <% }%>
 
-  <% if(same){ %>
-
-   <!-- Neuer Chat-->
-   <div class="chatcontainer">
-	  <ul class="chat">
-		  <li class="message">
-        <span class="username">User:</span> Message4, fdskalfjdlisa jfkdlsajfds i</li>
-		  <li class="message">
-        <span class="username">User:</span> Message3</li>
-		  <li class="message">
-        <span class="username">User:</span> Message1</li>
-		  <li class="message">
-      <span class="username">User:</span> Message2</li>
-    </ul>
-  </div>
-    <!-- Alter Chat-->
-    <ul id="chatList">
-  
-    </ul>
-    <a href="/settings" > Einstellungen</a>
-  
-    <script>
+    <script defer>
       //socketIO
       var socket = io();
       socket.emit('join', "<%=name%>");
       socket.on("chat message", (data) =>{  
-  
+        console.dir(data)
+        //create Spam with user
+        var span = document.createElement("SPAN");
+        var user = document.createTextNode(data.name);
+        span.setAttribute('class', 'username');
+        span.appendChild(user);
+
+        //create li
         var node = document.createElement("LI");
-        var textnode = document.createTextNode(data);
-        node.appendChild(textnode);
-        document.getElementById("chatList").appendChild(node);
-  
+        var usermsg = document.createTextNode(data.msg);
+        node.setAttribute('class', 'message');
+        node.appendChild(span);
+        node.appendChild(usermsg);
+
+        var ul = document.getElementById("chatlist");
+        ul.appendChild(node);
+
+
+      })
+
+      socket.on("status", (data) =>{  
+
+        if(data.success){
+          document.getElementById("sendStatus").innerHTML = data.asw;
+          document.getElementById('msg').value = '';
+        } else {
+          
+          document.getElementById("sendStatus").innerHTML = data.asw;
+        }
+        
       })
   
+      var btn = document.getElementById("send");
+  
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+  
+        var msg2send = document.getElementById('msg').value;
+        
+        console.log("sending: " + msg2send)
+        socket.emit('chat message', msg2send);
+      })
+
     </script>
-  
 
-  
-    <% } else { %>
-      <div id="sendbottom">
-        <input type="text" id="msg">
-        <input type="button" id="send" value="send">
-      </div>
-  
-      <script>
-        //socketIO
-        var socket = io();
-        socket.emit('join', "<%=name%>");
-        socket.on("status", (data) =>{  
-          
-          console.log("DATA" + data.asw)
-          if(data.success){
-            document.getElementById("chat").innerHTML = data.asw;
-            document.getElementById('msg').value = '';
-          } else {
-            
-            document.getElementById("chat").innerHTML = data.asw;
-          }
-          
-        })
-    
-        var btn = document.getElementById("send");
-    
-        btn.addEventListener('click', e => {
-          e.preventDefault()
-    
-          var msg2send = document.getElementById('msg').value;
-          
-          console.log("sending: " + msg2send)
-          socket.emit('chat message', msg2send);
-        })
+  </div>
+   <!-- Neuer Chat-->
 
-      </script>
+  <% if(same){ %>
 
-      <% } %>
+    <a href="/settings" > Einstellungen</a>
+
+  <% } %>
 
   <% }%>
 

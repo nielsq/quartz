@@ -104,7 +104,7 @@ async function createUser(sid) {
          
      })
 
-    var values = "(\"" + sid + "\", \"TITLE\", \"DESCIPTION\", \"" + test + "\", 0, 1,1);"
+    var values = "(\"" + sid + "\", \"TITLE\", \"DESCIPTION\", \"" + test + "\", 0, 1,1,1);"
     var q2 ="INSERT INTO app_livestream_channel VALUES "
     const [rows2, fields2] = await promisePool.query(q2 + values);
 
@@ -124,10 +124,10 @@ async function renewStreamKey(name){
 
 }
 
-async function updateChannel(name, title, descrip, onlyUser){
+async function updateChannel(name, title, descrip, onlyUser, chat){
 
     var sid = (await userMod.getUserByNickname(name)).objectSid
-    var values = "chan_title=\""+title+ "\", chan_descrip=\""+descrip+"\" ,chan_log_on_only=\""+ onlyUser + "\" "
+    var values = "chan_title=\""+title+ "\", chan_descrip=\""+descrip+"\" ,chan_log_on_only=\""+ onlyUser + "\", chan_chat="+ chat
     var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
 
     await promisePool.query(q);
@@ -146,7 +146,7 @@ async function getChannel(name){
 
     var sid = (await userMod.getUserByNickname(name)).objectSid
 
-    var q2 ="SELECT chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online FROM app_livestream_channel WHERE sid = \"" + sid + "\";"
+    var q2 ="SELECT chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online, chan_chat FROM app_livestream_channel WHERE sid = \"" + sid + "\";"
     const [rows2, fields2] = await promisePool.query(q2);
 
     if(isEmpty(rows2)){

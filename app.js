@@ -140,25 +140,38 @@ io.on('connection', async function (socket) {
     var user = await socket.request.user;
     var chn = await database.getChannel([socket.room])
 
+    if(chn[0].chan_chat == 1){
+      io.to(socket.id).emit("status", {success: false, asw: "Deaktiviert"} )
+    }
     if(msg.length > 280){
       io.to(socket.id).emit("status", {success: false, asw: "Maximal 280 zeichen"} )
-    } else if (!user.nickname && chn[0].chan_log_on_only == 1 ){
+    } else if (!user.nickname && (chn[0].chan_chat == 3 || chn[0].chan_chat == 5)){
       io.to(socket.id).emit("status", {success: false, asw: "User only"} )
     } else {
       io.to(socket.id).emit("status", {success: true, asw: "Danke für die Nachricht"} )
 
-      var socketIDS = []
-      socketIDS = authSockets[socket.room]
-      
-  
-      socketIDS.forEach(element => {
+      if(chn[0].chan_chat == 2 || chn[0].chan_chat == 3 ) {
+        var socketIDS = []
+        socketIDS = authSockets[socket.room]
+    
+        socketIDS.forEach(element => {
+          if(user.nickname){
+            socket.to(element).emit("chat message", {name: user.nickname + ": ", msg: msg} )
+          } else {
+            socket.to(element).emit("chat message", {name: "Gast: ", msg: msg} )
+          }
+          
+        });
+      } else if(chn[0].chan_chat == 4 || chn[0].chan_chat == 5 ) {
+        console.log("Sending to all")
         if(user.nickname){
-          socket.to(element).emit("chat message", (user.nickname + ": " + msg) )
+          io.to(socket.room).emit("chat message", {name: user.nickname + ": ", msg: msg} )
         } else {
-          socket.to(element).emit("chat message", ("Gast: " + msg) )
+          io.to(socket.room).emit("chat message", {name: "Gast: ", msg: msg} )
         }
         
-      });
+      }
+
     }
    
     
@@ -217,6 +230,7 @@ app.post("/settings", utils.checkAuthenticated, async function(req, res){
   var title = req.body.Title
   var descrip = req.body.descrip
   var loginOnly = req.body.loginOnly
+  var chat = req.body.chat
 
   if(loginOnly == "on"){
     loginOnly = 1
@@ -224,7 +238,11 @@ app.post("/settings", utils.checkAuthenticated, async function(req, res){
     loginOnly = 0
   }
 
-  await database.updateChannel(user.nickname, title, descrip, loginOnly)
+  if(chat > 5 || chat < 0){
+    req.flash("status", "Fehler: Falsche Chat funktion")
+  }
+
+  await database.updateChannel(user.nickname, title, descrip, loginOnly, chat)
 
   
   res.redirect('/channel/' + user.nickname)

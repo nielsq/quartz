@@ -52,7 +52,15 @@
   <label for="descrip">Beschreibung:</label><br>
   <input type="text" id="descrip" name="descrip" value="<%= chn.chan_descrip %>"><br>
   <label for="loginOnly">Nur für User: </label>
-  <input type="checkbox" id="loginOnly" name="loginOnly" <% if (chn.chan_log_on_only == 1 ) {%> checked <%}%>>
+  <input type="checkbox" id="loginOnly" name="loginOnly" <% if (chn.chan_log_on_only == 1 ) {%> checked <%}%>><br>
+  <label>Chat:</label> 
+  <select name="chat" id="chat">
+    <option value=1 <% if(chn.chan_chat == 1) {%> selected <% } %> >Kein Chat</option>
+    <option value=2 <% if(chn.chan_chat == 2) {%> selected <% } %> >Einseitiger Chat mit Gast</option>
+    <option value=3 <% if(chn.chan_chat == 3) {%> selected <% } %> >Einseitiger Chat ohne Gast</option>
+    <option value=4 <% if(chn.chan_chat == 4) {%> selected <% } %> >Öffentlicher Chat mit Gast</option>
+    <option value=5 <% if(chn.chan_chat == 5) {%> selected <% } %> >Öffentlicher Chat ohne Gast</option>
+  </select>
   <br>
   <input type="submit" value="Senden">
 </form>
@@ -90,7 +98,6 @@
   </select>
   <br>
 
-  
   <label>Live Thumbnail:</label> 
   <select name="online" id="online">
     <option value=1 <% if(chn.chan_thumb_online == 1) {%> selected <% } %> >Default</option>
