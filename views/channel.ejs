@@ -4,7 +4,7 @@
 
   <%- include('./head'); %>
   <script src="https://unpkg.com/socket.io-client@3.0.1/dist/socket.io.min.js"></script>
-  <link rel="stylesheet" href="/resources/chat.css">
+  <link rel="stylesheet" href="/resources/channel.css">
 </head>
 <body>
 
@@ -52,7 +52,7 @@
 
 </div>
 
-<div id="StreamInfos">
+<div class="information" id="StreamInfos">
   <h2><%= chn.chan_title %></h2>
   <p> <b><%= name %>: </b >DESCIPTION <%= chn.chan_descrip %></p>
 
@@ -98,8 +98,13 @@
        
     
     <% } %>
-</div>
 
+    <% if(same){ %>
+
+      <a href="/settings" > Einstellungen</a>
+  
+    <% } %>
+</div>
 
 <div class="chat">
 
@@ -107,18 +112,19 @@
     <p>chat deaktiviert</p>
   <% } else if (chn.chan_chat == 2 )  {%>
     <div id="sendbottom">
-      <input type="text" id="msg">
-      <input type="button" id="send" value="send">
+      <input class="inputMessage" type="text" id="msg"/>
+      <input type="button" id="send" value="send" class="inlineButton">
       <p id="sendStatus"></p>
     </div>
   <% } else if (chn.chan_chat == 3 && !user)  {%>
     <p>chat deaktiviert, bitte einloggen</p>
   <% } else if (chn.chan_chat == 3 && user && !same)  {%>
-    <div id="sendbottom">
-      <input type="text" id="msg">
-      <input type="button" id="send" value="send">
-      <p id="sendStatus"></p>
-    </div>
+      <div id="sendbottom">
+        <input class="inputMessage" type="text" id="msg"/>
+        <input type="button" id="send" value="send" class="inlineButton">
+        <p id="sendStatus"></p>
+      </div>
+
   <% } else if ((chn.chan_chat == 3 || chn.chan_chat == 2) && same)  {%>
     <div class="chatcontainer">
       <p>Chat:</p>
@@ -128,65 +134,75 @@
   <% } else if (chn.chan_chat == 4 )  {%>
     <div class="chatcontainer">
       <p>Chat:</p>
-      <ul id="chatlist" class="chat" >
+      <ul id="chatlist" class="chat">
+  
       </ul>
+      <div id="sendbottom">
+        <input class="inputMessage" type="text" id="msg"/>
+        <input type="button" id="send" value="send" class="inlineButton">
+        <p id="sendStatus"></p>
+      </div>
     </div>
-    <div id="sendbottom">
-      <input type="text" id="msg">
-      <input type="button" id="send" value="send">
-      <p id="sendStatus"></p>
-    </div>
-      
   <% } else if (chn.chan_chat == 5 && !user)  {%>
     <p>chat deaktiviert, bitte einloggen</p>
   <% } else if (chn.chan_chat == 5 && user)  {%>
     <div class="chatcontainer">
       <p>Chat:</p>
-      <ul id="chatlist" class="chat" >
+      <ul id="chatlist" class="chat">
+        
       </ul>
-    </div>
-    <div id="sendbottom">
-      <input type="text" id="msg">
-      <input type="button" id="send" value="send">
-      <p id="sendStatus"></p>
+      <div id="sendbottom">
+        <input class="inputMessage" type="text" id="msg"/>
+        <input type="button" id="send" value="send" class="inlineButton">
+        <p id="sendStatus"></p>
+      </div>
     </div>
   <% }%>
 
-    <script defer>
+  <script>
       //socketIO
       var socket = io();
       socket.emit('join', "<%=name%>");
       socket.on("chat message", (data) =>{  
         console.dir(data)
-        //create Spam with user
-        var span = document.createElement("SPAN");
-        var user = document.createTextNode(data.name);
-        span.setAttribute('class', 'username');
-        span.appendChild(user);
 
-        //create li
+        var userSPAN = document.createElement("SPAN");
+        userSPAN.setAttribute('class', 'username');
+        var userTEXT = document.createTextNode(data.name);
+        userSPAN.appendChild(userTEXT);
+
+
+        var msgSPAN = document.createElement("SPAN");
+        msgSPAN.setAttribute('class', 'message');
+        var msgTEXT = document.createTextNode(data.msg);
+        msgSPAN.appendChild(msgTEXT);
+
         var node = document.createElement("LI");
-        var usermsg = document.createTextNode(data.msg);
-        node.setAttribute('class', 'message');
-        node.appendChild(span);
-        node.appendChild(usermsg);
+        node.setAttribute('class', 'messageContainer');
+
+        node.appendChild(userSPAN);
+        node.appendChild(msgSPAN);
 
         var ul = document.getElementById("chatlist");
         ul.appendChild(node);
 
-
       })
 
-      socket.on("status", (data) =>{  
+      socket.on("status", async (data) =>{  
+
+        console.dir(data)
 
         if(data.success){
+
           document.getElementById("sendStatus").innerHTML = data.asw;
           document.getElementById('msg').value = '';
         } else {
           
           document.getElementById("sendStatus").innerHTML = data.asw;
         }
-        
+
+        await sleep(3000)
+        document.getElementById("sendStatus").innerHTML = '';
       })
   
       var btn = document.getElementById("send");
@@ -199,19 +215,16 @@
         console.log("sending: " + msg2send)
         socket.emit('chat message', msg2send);
       })
+      
+      function sleep(milliseconds) {
+        return new Promise(resolve => setTimeout(resolve, milliseconds));
+      }
 
     </script>
 
-  </div>
-   <!-- Neuer Chat-->
+</div>
 
-  <% if(same){ %>
-
-    <a href="/settings" > Einstellungen</a>
-
-  <% } %>
-
-  <% }%>
+<% }%>
 
 <footer>
     <%- include('./footer'); %>

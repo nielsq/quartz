@@ -142,8 +142,7 @@ io.on('connection', async function (socket) {
 
     if(chn[0].chan_chat == 1){
       io.to(socket.id).emit("status", {success: false, asw: "Deaktiviert"} )
-    }
-    if(msg.length > 280){
+    }else if(msg.length > 280){
       io.to(socket.id).emit("status", {success: false, asw: "Maximal 280 zeichen"} )
     } else if (!user.nickname && (chn[0].chan_chat == 3 || chn[0].chan_chat == 5)){
       io.to(socket.id).emit("status", {success: false, asw: "User only"} )

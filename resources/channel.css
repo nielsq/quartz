@@ -1,0 +1,71 @@
+
+/*
+Danke an Carlo
+*/
+.chat 
+{
+  display: inline-block;
+}
+.information 
+{
+  display: inline-block;
+}
+
+.chatcontainer {
+  height:100%;
+  width: 25%;
+  float: right;
+  display: block;
+  border: 2px solid #dedede;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+  
+}
+.messageContainer {
+  
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  padding:0%;
+  font-family: Arial, Helvetica, sans-serif;
+  list-style-type: none;
+  display: inline-block;
+  overflow: hidden;
+  width:90%
+}
+.sendMessage {
+  display: inline-block;
+}
+.username {
+  display: inline;
+  float: left;
+  font-weight:bold;
+}
+.chat {
+    list-style-type: none;
+    display:contents;
+}
+.message 
+{
+  display: inline;
+  overflow: hidden;
+  word-break: break-word;
+  margin-left:0.2em;
+}
+.inputMessage
+{
+  display: inline;
+  overflow: hidden;
+  width: 72%;
+}
+.inlineButton 
+{
+  display:inline;
+  overflow: hidden;
+  width:25%;
+}
+
+#sendbottom 
+{
+  margin:0.2em;
+}
+
