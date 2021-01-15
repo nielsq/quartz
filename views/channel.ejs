@@ -29,7 +29,9 @@
   </video-js>
 
   <script>
-    //player
+    var socket = io("/viewer");
+    socket.emit('join', "<%=name%>");
+
     var player = videojs('vid1');
     player.fluid(true);
     if(!<%=live%>){
@@ -110,6 +112,18 @@
 
   <% if (chn.chan_chat == 1 ) { %>
     <p>chat deaktiviert</p>
+    <% } else if ((chn.chan_chat == 3 || chn.chan_chat == 2) && same)  {%>
+      <div class="chatcontainer">
+        <p>Chat:</p>
+        <ul id="chatlist" class="chat">
+    
+        </ul>
+        <div id="sendbottom">
+          <input class="inputMessage" type="text" id="msg"/>
+          <input type="button" id="send" value="send" class="inlineButton">
+          <p id="sendStatus"></p>
+        </div>
+      </div>
   <% } else if (chn.chan_chat == 2 )  {%>
     <div id="sendbottom">
       <input class="inputMessage" type="text" id="msg"/>
@@ -124,13 +138,6 @@
         <input type="button" id="send" value="send" class="inlineButton">
         <p id="sendStatus"></p>
       </div>
-
-  <% } else if ((chn.chan_chat == 3 || chn.chan_chat == 2) && same)  {%>
-    <div class="chatcontainer">
-      <p>Chat:</p>
-      <ul id="chatlist" class="chat" >
-      </ul>
-    </div>
   <% } else if (chn.chan_chat == 4 )  {%>
     <div class="chatcontainer">
       <p>Chat:</p>
@@ -161,9 +168,11 @@
 
   <script>
       //socketIO
-      var socket = io();
-      socket.emit('join', "<%=name%>");
-      socket.on("chat message", (data) =>{  
+       var socket2 = io("/chat");
+      socket2.emit('join', "<%=name%>");
+
+      //socket.emit('join', "<%=name%>");
+      socket2.on("chat message", (data) =>{  
         console.dir(data)
 
         var userSPAN = document.createElement("SPAN");
@@ -188,7 +197,7 @@
 
       })
 
-      socket.on("status", async (data) =>{  
+      socket2.on("status", async (data) =>{  
 
         console.dir(data)
 
@@ -213,7 +222,7 @@
         var msg2send = document.getElementById('msg').value;
         
         console.log("sending: " + msg2send)
-        socket.emit('chat message', msg2send);
+        socket2.emit('chat message', msg2send);
       })
       
       function sleep(milliseconds) {

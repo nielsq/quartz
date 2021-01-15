@@ -12,10 +12,12 @@
 
 </header>
 
-<script>
-  const socket = io();
-</script>
+<% for(var i=0; i < livechannel.length; i++) { %>
+  <div>
+    <a><%= livechannel[i].nickname %></a>
+  </div>
 
+<% } %>
 
 
   <a href="/channel/nquanz" > nquanz</a>

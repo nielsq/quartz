@@ -69,10 +69,14 @@ app.set('view-engine', 'ejs')
 
 //SocketIO
 const io = require('socket.io')(server);
-var numClients = {};
-var authSockets = {};
 
-io.use(passportSocketIo.authorize({
+var authSockets = {};
+var viewerCount = {};
+
+const chatNSP = io.of("/chat")
+const viewerNSP = io.of("/viewer")
+
+chatNSP.use(passportSocketIo.authorize({
 
   cookieParser: require("cookie-parser"),
   key:          'connect.sid', 
@@ -82,72 +86,82 @@ io.use(passportSocketIo.authorize({
   fail:         onAuthorizeFail,
 }));
 
-io.on('connection', async function (socket) {
+viewerNSP.on("connection", async function(socket){
 
   socket.on('join', async function (room) {
-      socket.join(room);
-      socket.room = room;
-      if (numClients[room] == undefined) {
-          numClients[room] = 1;
-      } else {
-          numClients[room]++;
-      }
-
-      var user = await socket.request.user
-
-      if(user.logged_in  == false){
     
-      } else if (user.nickname){
-        console.log("Adding "+ user.nickname + " with " + socket.id + " to AuthClients")
-        var ary = [];
-        if(!authSockets[user.nickname]){
-    
-          ary[0] = socket.id
-    
-          authSockets[user.nickname] = ary
-    
-        } else {
-    
-          ary = authSockets[user.nickname]
-          ary[ary.length] = socket.id
-          authSockets[user.nickname] = ary
-    
-        }
-        
-      } 
-  });
-  
-  socket.on('disconnect', function () {
-
-    numClients[socket.room]--;
-
-    console.log("bye: " + socket.id + " form room " + socket.room)
-
-    if(socket.room){
-
-      var socketIDS = []
-      socketIDS = authSockets[socket.room]
-      
-        console.log("removing form Auth clients")
-        utils.removeItemOnce(socketIDS, socket.id)
-
+    socket.join(room);
+    socket.room = room;
+    if (viewerCount[room] == undefined) {
+        viewerCount[room] = 1;
+    } else {
+        viewerCount[room]++;
     }
 
+  })
+
+  socket.on('disconnect', async function () {
+
+    viewerCount[socket.room]--;
+  })
+
+})
+
+chatNSP.on("connection", async function(socket){
+
+  socket.on('join', async function (room) {
+
+    socket.join(room);
+    socket.room = room;
+
+    var user = await socket.request.user
+
+    if(user.logged_in  == false){
+  
+    } else if (user.nickname){
+
+      var ary = [];
+      if(!authSockets[user.nickname]){
+  
+        ary[0] = socket.id
+  
+        authSockets[user.nickname] = ary
+  
+      } else {
+  
+        ary = authSockets[user.nickname]
+        ary[ary.length] = socket.id
+        authSockets[user.nickname] = ary
+  
+      }
+      
+    } 
+  });
+
+  socket.on('disconnect', async function () {
+
+    if(socket.room){
+      var socketIDS = []
+      socketIDS = authSockets[socket.room]
+      utils.removeItemOnce(socketIDS, socket.id)
+    }
 
   });
-  
+
   socket.on('chat message', async function (msg) {
     var user = await socket.request.user;
     var chn = await database.getChannel([socket.room])
 
     if(chn[0].chan_chat == 1){
-      io.to(socket.id).emit("status", {success: false, asw: "Deaktiviert"} )
+      chatNSP.to(socket.id).emit("status", {success: false, asw: "Deaktiviert"} )
     }else if(msg.length > 280){
-      io.to(socket.id).emit("status", {success: false, asw: "Maximal 280 zeichen"} )
+      chatNSP.to(socket.id).emit("status", {success: false, asw: "Maximal 280 zeichen"} )
+    }else if(msg.length <= 0){
+      chatNSP.to(socket.id).emit("status", {success: false, asw: "Bro, musst schon was schreiben"} )
     } else if (!user.nickname && (chn[0].chan_chat == 3 || chn[0].chan_chat == 5)){
-      io.to(socket.id).emit("status", {success: false, asw: "User only"} )
+      chatNSP.to(socket.id).emit("status", {success: false, asw: "User only"} )
     } else {
-      io.to(socket.id).emit("status", {success: true, asw: "Danke für die Nachricht"} )
+      chatNSP.to(socket.id).emit("status", {success: true, asw: "Danke für die Nachricht"} )
 
       if(chn[0].chan_chat == 2 || chn[0].chan_chat == 3 ) {
         var socketIDS = []
@@ -155,18 +169,18 @@ io.on('connection', async function (socket) {
     
         socketIDS.forEach(element => {
           if(user.nickname){
-            socket.to(element).emit("chat message", {name: user.nickname + ": ", msg: msg} )
+            chatNSP.to(element).emit("chat message", {name: user.nickname + ": ", msg: msg} )
           } else {
-            socket.to(element).emit("chat message", {name: "Gast: ", msg: msg} )
+            chatNSP.to(element).emit("chat message", {name: "Gast: ", msg: msg} )
           }
           
         });
       } else if(chn[0].chan_chat == 4 || chn[0].chan_chat == 5 ) {
         console.log("Sending to all")
         if(user.nickname){
-          io.to(socket.room).emit("chat message", {name: user.nickname + ": ", msg: msg} )
+          chatNSP.to(socket.room).emit("chat message", {name: user.nickname + ": ", msg: msg} )
         } else {
-          io.to(socket.room).emit("chat message", {name: "Gast: ", msg: msg} )
+          chatNSP.to(socket.room).emit("chat message", {name: "Gast: ", msg: msg} )
         }
         
       }
@@ -198,7 +212,18 @@ app.get("/",  async (req, res) => {
 
   var user = await req.user
 
-  res.render('home.ejs', { page: "home", user:user} )
+  var channels = []
+  var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
+  if(!utils.isEmpty(resp))
+  Object.keys(resp.live).forEach (async item =>  {
+    console.log(item)
+    //streamkey to name
+    //channels.push(await database.getChannel(item))
+  })
+
+
+  res.render('home.ejs', { page: "home", user:user, livechannel: channels} )
+
 })
 
 app.post('/login', utils.checkNotAuthenticated, passport.authenticate('local', {
@@ -448,7 +473,8 @@ app.get("/channel/:chn", async function(req, res) {
 app.get("/viewer/:chn", async function(req, res) {
  
   const chn = req.params.chn
-  var viewer = numClients[chn]
+  var viewer = viewerCount[chn]
+
   if (viewer === undefined ){
     res.send("Viewer: 0 ")
   } else {

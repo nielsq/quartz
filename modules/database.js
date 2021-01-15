@@ -8,9 +8,6 @@ const fs = require('fs')
 
 
 
-function isEmpty(obj) {
-    return Object.keys(obj).length === 0;
-}
 
 class User {
     constructor(nickname, cn, givenName, sn, mail, objectSid){
@@ -29,7 +26,7 @@ const pool  = mysql.createPool({
     user            : process.env.DB_USER,
     password        : process.env.DB_PW,
     database        : process.env.DB_NAME
-  });
+});
 
 const promisePool = pool.promise();
 
@@ -93,9 +90,9 @@ async function createUser(sid) {
     await promisePool.query(q1  + values1);
 
     return true;
-  }
+}
 
-  async function createChannel(name){
+async function createChannel(name){
 
     var sid = (await userMod.getUserByNickname(name)).objectSid
 
@@ -175,9 +172,9 @@ async function getStreamKey(name){
     return rows2[0].chan_key
 }
 
-  function isEmpty(obj) {
+function isEmpty(obj) {
     return Object.keys(obj).length === 0;
-  }
+}
 
   module.exports.getUser = getUser;
   module.exports.createUser = createUser;
