@@ -14,7 +14,8 @@
 
 <% for(var i=0; i < livechannel.length; i++) { %>
   <div>
-    <a><%= livechannel[i].nickname %></a>
+    <img src="/content/<%=livechannel[i].nickname%>/thumbnail.png" width="150" height="100" id="<%= livechannel[i].nickname %>">
+    <a href="/channel/<%= livechannel[i].nickname %>"><b><%= livechannel[i].nickname %>: </b>  <%= livechannel[i].chan_title %></a>
   </div>
 
 <% } %>

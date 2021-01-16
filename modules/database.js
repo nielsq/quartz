@@ -6,9 +6,6 @@ var mysql = require('mysql2');
 var userMod = require("./user");
 const fs = require('fs')
 
-
-
-
 class User {
     constructor(nickname, cn, givenName, sn, mail, objectSid){
         this.nickname = nickname;
@@ -163,6 +160,16 @@ async function getChannel(name){
 
 }
 
+async function getChannelByKey(key){
+
+    var q2 ="SELECT sid, chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online, chan_chat FROM app_livestream_channel WHERE chan_key = \"" + key + "\";"
+    const [rows2, fields2] = await promisePool.query(q2);
+
+    return rows2
+
+
+}
+
 async function getStreamKey(name){
 
     var sid = (await userMod.getUserByNickname(name)).objectSid
@@ -186,3 +193,4 @@ function isEmpty(obj) {
   module.exports.updateThumbnails = updateThumbnails;
   module.exports.getChannel = getChannel;
   module.exports.getStreamKey = getStreamKey;
+  module.exports.getChannelByKey = getChannelByKey;

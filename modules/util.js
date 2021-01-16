@@ -103,7 +103,6 @@ function isEmpty(obj) {
 function removeItemOnce(arr, value) {
   var index = arr.indexOf(value);
   if (index > -1) {
-    console.log("removed")
     arr.splice(index, 1);
   }
   return arr;

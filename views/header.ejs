@@ -37,6 +37,11 @@
     background-color: dodgerblue;
     color: white;
   }
+
+  .header a.semiactive {
+    background-color: rgb(255, 195, 30);
+    color: white;
+  }
   
   .header-right {
     float: right;
@@ -57,9 +62,10 @@
 
 
 <div class="header">
-  <a href="#default" class="logo">QUARTZ</a>
+  <a href="/" class="logo">QUARTZ</a>
   <div class="header-right">
     <a <% if(page == "home") { %> class="active" <% } %>  href="/">Home</a>
+    <a <% if(page == "channel" && same) { %> class="semiactive" <% } else if(page == "channel") {%> class="active" <% } %> href="/mychannel">Channel</a>
      <% if(user) { %> <a href="#" onclick="logout();">Logout</a> <% } else { %> <a <% if(page == "login") { %> class="active" <% } %> href="/login">Login</a><% } %>
     
   </div>

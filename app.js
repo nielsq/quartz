@@ -210,18 +210,30 @@ RTMPserver.startStreamServer(utils.config);
 //routes
 app.get("/",  async (req, res) => {
 
+
   var user = await req.user
+  var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
 
   var channels = []
-  var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
+
   if(!utils.isEmpty(resp))
-  Object.keys(resp.live).forEach (async item =>  {
-    console.log(item)
-    //streamkey to name
-    //channels.push(await database.getChannel(item))
-  })
+  var liveChans = Object.keys(resp.live);
 
+  for(const item in liveChans){
 
+    var infos = await database.getChannelByKey(liveChans[item])
+    var infos2 = await database.getUser(infos[0].sid)
+
+    var channel = {
+      chan_title : infos[0].chan_title,
+      nickname : infos2.nickname 
+    }
+    
+    channels.push(channel)
+
+  }
+
+  console.dir(channels)
   res.render('home.ejs', { page: "home", user:user, livechannel: channels} )
 
 })
@@ -242,7 +254,7 @@ app.get("/settings",utils.checkAuthenticated, async function(req, res){
   var channel = await database.getChannel(user.nickname)
   var key = await database.getStreamKey(user.nickname)
 
-  res.render('settings.ejs', { chn: channel[0], Skey:key, page:"livestream", user:user, status: req.flash('status')})
+  res.render('settings.ejs', { chn: channel[0], Skey:key, page:"channel", user:user, status: req.flash('status'), same:true})
 
 })
 
@@ -466,7 +478,15 @@ app.get("/channel/:chn", async function(req, res) {
   }
   
 
-  res.render('channel.ejs', { name:chn, chn: channel[0], page:"livestream", user:user, same:same, live:live})
+  res.render('channel.ejs', { name:chn, chn: channel[0], page:"channel", user:user, same:same, live:live})
+  
+})
+
+app.get("/mychannel", utils.checkAuthenticated, async function(req, res) {
+ 
+  var user = await req.user
+
+  res.redirect('/channel/' + user.nickname)
   
 })
 
@@ -560,6 +580,7 @@ app.use("/content/:chn", async function(req, res){
 
 
 })
+
 
 app.delete('/logout', (req, res) => {
   req.logOut()
