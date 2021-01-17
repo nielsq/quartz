@@ -166,6 +166,10 @@
     </div>
   <% }%>
 
+  
+  <button onclick="socket2.emit('feedback', '1')">GOOD</button>
+  <button onclick="socket2.emit('feedback', '-1')">BAD</button>
+
   <script>
       //socketIO
        var socket2 = io("/chat");
@@ -214,6 +218,9 @@
         document.getElementById("sendStatus").innerHTML = '';
       })
   
+      socket2.on("feedback", (data)=>{
+        console.log(data)
+      })
       var btn = document.getElementById("send");
   
       btn.addEventListener('click', e => {
@@ -232,6 +239,7 @@
     </script>
 
 </div>
+
 
 <% }%>
 

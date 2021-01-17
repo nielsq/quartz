@@ -72,11 +72,22 @@ const io = require('socket.io')(server);
 
 var authSockets = {};
 var viewerCount = {};
+var viewerfd = {}
 
 const chatNSP = io.of("/chat")
 const viewerNSP = io.of("/viewer")
 
 chatNSP.use(passportSocketIo.authorize({
+
+  cookieParser: require("cookie-parser"),
+  key:          'connect.sid', 
+  secret:       process.env.SESSION_SECRET,
+  store:       sessionStore,
+  success:      onAuthorizeSuccess, 
+  fail:         onAuthorizeFail,
+}));
+
+viewerNSP.use(passportSocketIo.authorize({
 
   cookieParser: require("cookie-parser"),
   key:          'connect.sid', 
@@ -103,6 +114,8 @@ viewerNSP.on("connection", async function(socket){
   socket.on('disconnect', async function () {
 
     viewerCount[socket.room]--;
+
+
   })
 
 })
@@ -144,7 +157,11 @@ chatNSP.on("connection", async function(socket){
       var socketIDS = []
       socketIDS = authSockets[socket.room]
       utils.removeItemOnce(socketIDS, socket.id)
+      utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
+      utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
     }
+
+
 
   });
 
@@ -189,6 +206,38 @@ chatNSP.on("connection", async function(socket){
    
     
   });
+
+  socket.on("feedback", async function(status) {
+
+    if(viewerfd[socket.room] === undefined){
+      viewerfd[socket.room] = {
+        positiv : [],
+        negativ : [] 
+      }
+    }
+
+    utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
+    utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
+
+    //feedback 1 = good | 0 = bad
+    if(status == 1){
+      console.log("GOOOD")
+      viewerfd[socket.room].positiv.push(socket.id)
+    } else if(status == -1) {
+      console.log("NOT GOOOOED")
+      viewerfd[socket.room].negativ.push(socket.id)
+    }   
+
+    var socketIDS = []
+    socketIDS = authSockets[socket.room]
+    
+    socketIDS.forEach(element => {
+      chatNSP.to(element).emit("feedback", {negativ: viewerfd[socket.room].negativ.length, positiv: viewerfd[socket.room].positiv.length})  
+    });
+
+
+  
+  })
 
 })
 
