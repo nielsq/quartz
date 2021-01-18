@@ -17,6 +17,40 @@ class User {
     }
 }
 
+/*
+class User {
+    constructor(sid, nickname, displayName, firstName, surName, mail){
+        this.sid = sid
+        this.nickname = nickname;
+        this.displayName = displayName;
+        this.firstName = firstName;
+        this.surName = surName;
+        this.mail = mail;
+        
+    }
+}
+
+class Channel {
+    constructor(sid, title, description, userOnly, thumbOnline, thumbOffline, chat, feedback, key){
+        this.sid = sid
+        this.title = title;
+        this.description = description;
+        this.userOnly = userOnly;
+        this.thumbOnline = thumbOnline;
+        this.thumbOffline = thumbOffline;
+        this.chat = chat;
+        this.feedback = feedback;
+        this.key = key;
+    }
+}
+
+getChannelList
+getUserList
+
+*/
+
+
+
 const pool  = mysql.createPool({
     connectionLimit : 10,
     host            : process.env.DB_HOST,
@@ -27,30 +61,6 @@ const pool  = mysql.createPool({
 
 const promisePool = pool.promise();
 
-async function getActivModules(){
-
-    var q2 =" SELECT app_name FROM quartz_apps WHERE app_activ = 1;"
-    const [rows2, fields2] = await promisePool.query(q2).catch(console.log("ERROR getAcitvModules"));
-
-    if(isEmpty(rows2)){
-        return null;
-    } else {
-        return rows2
-    }
-}
-
-async function activeModule(name){
-
-    var q = "UPDATE quartz_apps Set app_activ WHERE app_name=\""+ name+"\";"
-    const [rows2, fields2] = await promisePool.query(q).catch(console.log("Error activeModules"));
-}
-
-async function addModule(name, status, admin_group){
-
-    var q = "INSERT INTO quartz_apps VALUES (\""+name+"\"," +status + ", \""+admin_group+"\");"
-    const [rows2, fields2] = await promisePool.query(q).catch(console.log("add Module"));
-
-}
    
 async function getUser(sid) {
     
@@ -98,7 +108,7 @@ async function createChannel(name){
          
      })
 
-    var values = "(\"" + sid + "\", \"TITLE\", \"DESCIPTION\", \"" + test + "\", 0, 1,1,1);"
+    var values = "(\"" + sid + "\", \"TITLE\", \"DESCIPTION\", \"" + test + "\", 0, 1,1,1,1);"
     var q2 ="INSERT INTO app_livestream_channel VALUES "
     const [rows2, fields2] = await promisePool.query(q2 + values);
 
@@ -118,10 +128,12 @@ async function renewStreamKey(name){
 
 }
 
-async function updateChannel(name, title, descrip, onlyUser, chat){
+async function updateChannel(name, title, descrip, onlyUser, chat, feedback){
+
+    console.log("feedback" + feedback)
 
     var sid = (await userMod.getUserByNickname(name)).objectSid
-    var values = "chan_title=\""+title+ "\", chan_descrip=\""+descrip+"\" ,chan_log_on_only=\""+ onlyUser + "\", chan_chat="+ chat
+    var values = "chan_title=\""+title+ "\", chan_descrip=\""+descrip+"\" ,chan_log_on_only=\""+ onlyUser + "\", chan_chat="+ chat + ", chan_feedback="+ feedback
     var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
 
     await promisePool.query(q);
@@ -140,7 +152,7 @@ async function getChannel(name){
 
     var sid = (await userMod.getUserByNickname(name)).objectSid
 
-    var q2 ="SELECT chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online, chan_chat FROM app_livestream_channel WHERE sid = \"" + sid + "\";"
+    var q2 ="SELECT chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online, chan_chat, chan_feedback FROM app_livestream_channel WHERE sid = \"" + sid + "\";"
     const [rows2, fields2] = await promisePool.query(q2);
 
     if(isEmpty(rows2)){
@@ -160,9 +172,10 @@ async function getChannel(name){
 
 }
 
+
 async function getChannelByKey(key){
 
-    var q2 ="SELECT sid, chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online, chan_chat FROM app_livestream_channel WHERE chan_key = \"" + key + "\";"
+    var q2 ="SELECT sid, chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online, chan_chat, chan_feedback FROM app_livestream_channel WHERE chan_key = \"" + key + "\";"
     const [rows2, fields2] = await promisePool.query(q2);
 
     return rows2
@@ -185,8 +198,6 @@ function isEmpty(obj) {
 
   module.exports.getUser = getUser;
   module.exports.createUser = createUser;
-  module.exports.getActivModules = getActivModules;
-  module.exports.addModule = addModule;
   module.exports.renewStreamKey = renewStreamKey;
   module.exports.createChannel = createChannel;
   module.exports.updateChannel = updateChannel;

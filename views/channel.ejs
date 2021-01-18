@@ -40,12 +40,22 @@
 
     }
 
+    player.on('dblclick', function() {
+      this.requestFullscreen(); 
+
+      player.on('dblclick', function() {
+        this.exitFullscreen(); 
+      });
+
+    });
+
     player.on('pause', function() {
       this.bigPlayButton.show();
 
       player.one('play', function() {
         this.bigPlayButton.hide();
       });
+
     });
     //autoplay?
     //player.play();

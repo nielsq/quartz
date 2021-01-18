@@ -17,10 +17,7 @@ const https = require('https');
 const http = require('http');
 const utils = require('./modules/util');
 const passportSocketIo = require("passport.socketio");
-const { connect } = require('./modules/placeholder');
 const MySQLStore = require('express-mysql-session')(session)    
-const connect2 = require("passport/lib/framework/connect");
-const { countBy } = require('lodash');
 
 
 //80 -> 443
@@ -309,13 +306,13 @@ app.get("/settings",utils.checkAuthenticated, async function(req, res){
 
 app.post("/settings", utils.checkAuthenticated, async function(req, res){
 
-
   var user = await req.user
 
   var title = req.body.Title
   var descrip = req.body.descrip
   var loginOnly = req.body.loginOnly
   var chat = req.body.chat
+  var feedback = req.body.feedback
 
   if(loginOnly == "on"){
     loginOnly = 1
@@ -327,7 +324,7 @@ app.post("/settings", utils.checkAuthenticated, async function(req, res){
     req.flash("status", "Fehler: Falsche Chat funktion")
   }
 
-  await database.updateChannel(user.nickname, title, descrip, loginOnly, chat)
+  await database.updateChannel(user.nickname, title, descrip, loginOnly, chat, feedback)
 
   
   res.redirect('/channel/' + user.nickname)
@@ -555,7 +552,7 @@ app.get("/viewer/:chn", async function(req, res) {
 
 app.use("/content/:chn", async function(req, res){
 
-  var chn = await req.params.chn
+  var chn = await req.params.chn 
   var key = await database.getStreamKey(chn)
   var chnDetails = await database.getChannel(chn)
 
@@ -629,7 +626,6 @@ app.use("/content/:chn", async function(req, res){
 
 
 })
-
 
 app.delete('/logout', (req, res) => {
   req.logOut()

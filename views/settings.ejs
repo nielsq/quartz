@@ -60,6 +60,12 @@
     <option value=3 <% if(chn.chan_chat == 3) {%> selected <% } %> >Einseitiger Chat ohne Gast</option>
     <option value=4 <% if(chn.chan_chat == 4) {%> selected <% } %> >Öffentlicher Chat mit Gast</option>
     <option value=5 <% if(chn.chan_chat == 5) {%> selected <% } %> >Öffentlicher Chat ohne Gast</option>
+  </select><br>
+  <label>Feedback:</label> 
+  <select name="feedback" id="feedback">
+    <option value=1 <% if(chn.chan_feedback == 1) {%> selected <% } %> >Kein Feedback</option>
+    <option value=2 <% if(chn.chan_feedback == 2) {%> selected <% } %> >User Feedback</option>
+    <option value=3 <% if(chn.chan_feedback == 3) {%> selected <% } %> >Öffentliches</option>
   </select>
   <br>
   <input type="submit" value="Senden">
