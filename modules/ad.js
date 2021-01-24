@@ -10,6 +10,18 @@ var config = {
     }
   }
 
+  class User {
+    constructor(id, nickname, mail, firstName, lastName, displayName){
+        this.id = id;
+        this.nickname = nickname;
+        this.mail = mail;
+        this.firstName = firstName; //quanz, niels
+        this.lastName = lastName; //niels
+        this.displayName = displayName; //quanz
+    }
+}
+
+
   exports.authUser = async function(username, password){
     var ad = new ActiveDirectory2(config);
   
@@ -45,7 +57,9 @@ var config = {
         if (! user){
           resolve(null);
         } else {
-          resolve(user.users);
+
+          var userobj = new User(user.users.objectSid, user.users.sAMAccountName, user.users.mail, user.users.givenName, user.users.sn, user.users.cn)
+          resolve(userobj);
         }
       });
     }); 
@@ -63,7 +77,8 @@ var config = {
         if (! user){
           resolve(null);
         } else {
-          resolve(user);
+          var userobj = new User(user.objectSid, user.sAMAccountName, user.mail, user.givenName, user.sn, user.cn)
+          resolve(userobj);
         }
       });
     }); 

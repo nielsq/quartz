@@ -3,52 +3,32 @@ var mysql = require('mysql2');
 var ad = require('./ad')
 const uuid = require('uuid');
 var mysql = require('mysql2');
-var userMod = require("./user");
 const fs = require('fs')
 
 class User {
-    constructor(nickname, cn, givenName, sn, mail, objectSid){
+    constructor(id, nickname, mail, firstName, lastName, displayName){
+        this.id = id;
         this.nickname = nickname;
-        this.cn = cn;
-        this.givenName = givenName;
-        this.sn = sn;
         this.mail = mail;
-        this.objectSid = objectSid;
-    }
-}
-
-/*
-class User {
-    constructor(sid, nickname, displayName, firstName, surName, mail){
-        this.sid = sid
-        this.nickname = nickname;
-        this.displayName = displayName;
-        this.firstName = firstName;
-        this.surName = surName;
-        this.mail = mail;
-        
+        this.firstName = firstName; //quanz, niels
+        this.lastName = lastName; //niels
+        this.displayName = displayName; //quanz
     }
 }
 
 class Channel {
-    constructor(sid, title, description, userOnly, thumbOnline, thumbOffline, chat, feedback, key){
-        this.sid = sid
+    constructor(id, title, description, userOnly, thumb_online, thumb_offline, chat, feedback, skey){
+        this.id = id
         this.title = title;
         this.description = description;
         this.userOnly = userOnly;
-        this.thumbOnline = thumbOnline;
-        this.thumbOffline = thumbOffline;
+        this.thumb_online = thumb_online;
+        this.thumb_offline = thumb_offline;
         this.chat = chat;
         this.feedback = feedback;
-        this.key = key;
+        this.skey = skey;
     }
 }
-
-getChannelList
-getUserList
-
-*/
-
 
 
 const pool  = mysql.createPool({
@@ -62,26 +42,25 @@ const pool  = mysql.createPool({
 const promisePool = pool.promise();
 
    
-async function getUser(sid) {
+async function getUser(id) {
     
-    var q1 = "SELECT * FROM quartz_user WHERE sid = "+ "\""+ sid + "\";"
+    var q1 = "SELECT * FROM quartz_user WHERE id = "+ "\""+ id + "\";"
      return await promisePool.query(q1).then ( async ([result, fields]) => {
 
         if(isEmpty(result)){
-            var aduser = ad.getUserById(sid);
+            var aduser = await ad.getUserById(id);
 
             if(aduser){
                 
-                await createUser(sid)
-                return await getUser(sid)
+                await createUser(aduser.id, aduser.nickname ,aduser.mail, aduser.firstName, aduser.lastName, aduser.displayName)
+                return await getUser(id)
                 
             } else {
                 return null
              }
         } else {
             //user in app gefunden
-            var aduser = (await ad.getUserById(sid))[0];
-            user = new User(aduser.sAMAccountName, aduser.cn, aduser.givenName, aduser.sn, aduser.mail, aduser.objectSid);
+            var user = new User(result[0].id, result[0].nickname , result[0].mail, result[0].firstName, result[0].lastName, result[0].displayName);
             return user;
         }
         
@@ -90,106 +69,160 @@ async function getUser(sid) {
     
 }
 
-async function createUser(sid) {
+async function getUserByNickname(nickname) {
+    
+    var q1 = "SELECT * FROM quartz_user WHERE nickname = "+ "\""+ nickname + "\";"
+    return await promisePool.query(q1).then ( async ([result, fields]) => {
 
-    var values1 = "(\"" + sid + "\");";
-    var q1 = "INSERT INTO quartz_user (sid) VALUES "
+        if(isEmpty(result)){
+
+            var aduser = await ad.getUserByUname(nickname);
+
+            if(aduser){
+                
+                await createUser(aduser.id, aduser.nickname ,aduser.mail, aduser.firstName, aduser.lastName, aduser.displayName)
+                return await getUser(aduser.id)
+                
+            } else {
+                return null
+             }
+
+        } else {
+            
+            var user = new User(result[0].id, result[0].nickname , result[0].mail, result[0].firstName, result[0].lastName, result[0].displayName);
+            return user;
+        }
+        
+    })
+    .catch(console.log);
+    
+}
+
+async function createUser(id, nickname, mail, firstName, lastName, displayName) {
+
+    var values1 = "(\"" + id + "\", \"" + nickname + "\" , \"" + mail + "\", \"" + firstName + "\", \"" + lastName + "\", \"" + displayName + "\");";
+    var q1 = "INSERT INTO quartz_user VALUES "
+    
     await promisePool.query(q1  + values1);
-
+    await createChannel(id)
     return true;
 }
 
-async function createChannel(name){
+async function createChannel(id){
 
-    var sid = (await userMod.getUserByNickname(name)).objectSid
-
-    const test = uuid.v4();
-     fs.mkdir(__dirname +"/media/live/"+test+ "/", (err)=>{
+    const key = uuid.v4();
+     fs.mkdir(__dirname +"/media/live/"+key+ "/", (err)=>{
          
      })
 
-    var values = "(\"" + sid + "\", \"TITLE\", \"DESCIPTION\", \"" + test + "\", 0, 1,1,1,1);"
-    var q2 ="INSERT INTO app_livestream_channel VALUES "
+    var values = "(\"" + id + "\", \"TITLE\", \"DESCIPTION\", \"" + key + "\", 0, 1,1,1,1);"
+    var q2 ="INSERT INTO quartz_channel VALUES "
     const [rows2, fields2] = await promisePool.query(q2 + values);
-
-
 
 }
 
-async function renewStreamKey(name){
+async function renewStreamKey(id){
     
     const newUUID = uuid.v4();
 
-    var sid = (await userMod.getUserByNickname(name)).objectSid
-    var values = "chan_key=\""+newUUID+ "\""
-    var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
-
+    var values = "skey=\""+newUUID+ "\""
+    var q = "UPDATE quartz_channel SET " + values + " WHERE id=\""+id + "\";"
+    console.log(q)
     await promisePool.query(q);
 
 }
 
-async function updateChannel(name, title, descrip, onlyUser, chat, feedback){
+async function updateChannel(id, title, descrip, onlyUser, chat, feedback){
 
-    console.log("feedback" + feedback)
 
-    var sid = (await userMod.getUserByNickname(name)).objectSid
-    var values = "chan_title=\""+title+ "\", chan_descrip=\""+descrip+"\" ,chan_log_on_only=\""+ onlyUser + "\", chan_chat="+ chat + ", chan_feedback="+ feedback
-    var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
+    var values = "title=\""+title+ "\", description=\""+descrip+"\" , userOnly=\""+ onlyUser + "\", chat="+ chat + ", feedback="+ feedback
+    var q = "UPDATE quartz_channel SET " + values + " WHERE id=\""+id + "\";"
 
     await promisePool.query(q);
 }
 
-async function updateThumbnails(name, offline, online){
+async function updateThumbnails(id, offline, online){
 
-    var sid = (await userMod.getUserByNickname(name)).objectSid
-    var values = "chan_thumb_online="+ online + ", chan_thumb_offline=" +offline
-    var q = "UPDATE app_livestream_channel SET " + values + " WHERE sid=\""+sid + "\";"
+
+    var values = "thumb_online="+ online + ", thumb_offline=" +offline
+    var q = "UPDATE quartz_channel SET " + values + " WHERE id=\""+id + "\";"
 
     await promisePool.query(q);
 }
 
-async function getChannel(name){
+async function getChannel(id){
 
-    var sid = (await userMod.getUserByNickname(name)).objectSid
-
-    var q2 ="SELECT chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online, chan_chat, chan_feedback FROM app_livestream_channel WHERE sid = \"" + sid + "\";"
+    var q2 ="SELECT * FROM quartz_channel WHERE id = \"" + id + "\";"
     const [rows2, fields2] = await promisePool.query(q2);
 
     if(isEmpty(rows2)){
 
-        ad.getUserById(sid)
+        var user = await  ad.getUserByUname(name)
 
-        if(isEmpty(ad)){
+        if(isEmpty(user)){
             return false;
         } else {
-            await createChannel(name)
-            return (await getChannel(name))
+            await createUser(user.id,user.nickname,user.mail, user.firstName, user.lastName, user.displayName)
+            return (await getChannel(id))
         }
 
     } else {
-        return rows2
+        var channel = new Channel(rows2[0].id, rows2[0].title, rows2[0].description, rows2[0].userOnly,
+            rows2[0].thumb_online, rows2[0].thumb_online, rows2[0].chat, rows2[0].feedback, rows2[0].skey)
+        return channel
     }
 
 }
 
+async function getChannelByName(name){
 
-async function getChannelByKey(key){
+    var q2 ="SELECT quartz_channel.id ,title, description, userOnly, thumb_offline, thumb_online, chat, skey, feedback FROM quartz_channel JOIN quartz_user ON quartz_user.id=quartz_channel.id WHERE quartz_user.nickname = \"" + name + "\";"
+    const [rows2, fields2] = await promisePool.query(q2);
+    if(isEmpty(rows2)){
 
-    var q2 ="SELECT sid, chan_title, chan_descrip, chan_log_on_only, chan_thumb_offline, chan_thumb_online, chan_chat, chan_feedback FROM app_livestream_channel WHERE chan_key = \"" + key + "\";"
+        var user = await  ad.getUserByUname(name)
+
+        if(isEmpty(user)){
+            return false;
+        } else {
+            await createUser(user.id,user.nickname,user.mail, user.firstName, user.lastName, user.displayName)
+            return (await getChannelByName(name))
+        }
+
+    } else {
+        var channel = new Channel(rows2[0].id, rows2[0].title, rows2[0].description, rows2[0].userOnly,
+            rows2[0].thumb_online, rows2[0].thumb_online, rows2[0].chat, rows2[0].feedback, rows2[0].skey)
+        return channel
+    }
+
+}
+
+async function getChannelBySKey(skey){
+
+    var q2 ="SELECT * FROM quartz_channel WHERE skey=\"" + skey + "\";"
     const [rows2, fields2] = await promisePool.query(q2);
 
-    return rows2
+
+    var channel = new Channel(rows2[0].id, rows2[0].title, rows2[0].description, rows2[0].userOnly,
+        rows2[0].thumb_online, rows2[0].thumb_online, rows2[0].chat, rows2[0].feedback, rows2[0].skey)
+
+
+    return channel
 
 
 }
 
-async function getStreamKey(name){
+async function getStreamKey(id){
 
-    var sid = (await userMod.getUserByNickname(name)).objectSid
-    var q2 ="SELECT chan_key from app_livestream_channel WHERE sid = \""+ sid + "\";"
+    var q2 ="SELECT * from quartz_channel WHERE id = \""+  id + "\";"
     const [rows2, fields2] = await promisePool.query(q2);
 
-    return rows2[0].chan_key
+    if(rows2[0]){
+        return rows2[0].skey
+    } else {
+        return null
+    }
+    
 }
 
 function isEmpty(obj) {
@@ -204,4 +237,7 @@ function isEmpty(obj) {
   module.exports.updateThumbnails = updateThumbnails;
   module.exports.getChannel = getChannel;
   module.exports.getStreamKey = getStreamKey;
-  module.exports.getChannelByKey = getChannelByKey;
+  module.exports.getChannelBySKey = getChannelBySKey;
+  module.exports.getUserByNickname = getUserByNickname;
+  module.exports.getChannelByName = getChannelByName;
+  

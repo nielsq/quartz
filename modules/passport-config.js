@@ -1,6 +1,6 @@
 const LocalStrategy = require('passport-local').Strategy
 var ad = require('./ad')
-var userMod = require("./user");
+const database = require('./database');
 
 function initialize(passport) {
   const authenticateUser = async (name, passpord, done) => {
@@ -9,8 +9,8 @@ function initialize(passport) {
     
     if(result){
 
-      const user = await userMod.getUserByNickname(name)
-
+      const user = await database.getUserByNickname(name)
+      console.dir(user)
         return done(null, user)
         
     } else {
@@ -21,9 +21,9 @@ function initialize(passport) {
   }
 
   passport.use(new LocalStrategy({ usernameField: 'username' }, authenticateUser))
-  passport.serializeUser((user, done) => done(null, user.objectSid))
+  passport.serializeUser((user, done) => done(null, user.id))
   passport.deserializeUser((id, done) => {
-    return done(null, userMod.getUserBySID(id))
+    return done(null, database.getUser(id))
   })
 }
 

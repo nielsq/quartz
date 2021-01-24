@@ -13,7 +13,7 @@
 </header>
 
 
-<% if (chn.chan_log_on_only == 1 && !user) { %>
+<% if (chn.userOnly == 1 && !user) { %>
     <p>Bitte Loggen Sie sich ein um den Stream zu sehen</p>
 <% } else {%>
   
@@ -65,8 +65,8 @@
 </div>
 
 <div class="information" id="StreamInfos">
-  <h2><%= chn.chan_title %></h2>
-  <p> <b><%= name %>: </b >DESCIPTION <%= chn.chan_descrip %></p>
+  <h2><%= chn.title %></h2>
+  <p> <b><%= name %>: </b >DESCIPTION <%= chn.description %></p>
 
     <% if (!live) { %>
       <p>Offline</p>
@@ -120,9 +120,9 @@
 
 <div class="chat">
 
-  <% if (chn.chan_chat == 1 ) { %>
+  <% if (chn.chat == 1 ) { %>
     <p>chat deaktiviert</p>
-    <% } else if ((chn.chan_chat == 3 || chn.chan_chat == 2) && same)  {%>
+    <% } else if ((chn.chat == 3 || chn.chat == 2) && same)  {%>
       <div class="chatcontainer">
         <p>Chat:</p>
         <ul id="chatlist" class="chat">
@@ -134,21 +134,21 @@
           <p id="sendStatus"></p>
         </div>
       </div>
-  <% } else if (chn.chan_chat == 2 )  {%>
+  <% } else if (chn.chat == 2 )  {%>
     <div id="sendbottom">
       <input class="inputMessage" type="text" id="msg"/>
       <input type="button" id="send" value="send" class="inlineButton">
       <p id="sendStatus"></p>
     </div>
-  <% } else if (chn.chan_chat == 3 && !user)  {%>
+  <% } else if (chn.chat == 3 && !user)  {%>
     <p>chat deaktiviert, bitte einloggen</p>
-  <% } else if (chn.chan_chat == 3 && user && !same)  {%>
+  <% } else if (chn.chat == 3 && user && !same)  {%>
       <div id="sendbottom">
         <input class="inputMessage" type="text" id="msg"/>
         <input type="button" id="send" value="send" class="inlineButton">
         <p id="sendStatus"></p>
       </div>
-  <% } else if (chn.chan_chat == 4 )  {%>
+  <% } else if (chn.chat == 4 )  {%>
     <div class="chatcontainer">
       <p>Chat:</p>
       <ul id="chatlist" class="chat">
@@ -160,9 +160,9 @@
         <p id="sendStatus"></p>
       </div>
     </div>
-  <% } else if (chn.chan_chat == 5 && !user)  {%>
+  <% } else if (chn.chat == 5 && !user)  {%>
     <p>chat deaktiviert, bitte einloggen</p>
-  <% } else if (chn.chan_chat == 5 && user)  {%>
+  <% } else if (chn.chat == 5 && user)  {%>
     <div class="chatcontainer">
       <p>Chat:</p>
       <ul id="chatlist" class="chat">

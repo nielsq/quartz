@@ -48,24 +48,24 @@
 
 <form id="change"action="/settings/?_method=post" method="POST">
   <label for="Title">Title:</label><br>
-  <input type="text" id="Title" name="Title" value="<%= chn.chan_title %>"><br>
+  <input type="text" id="Title" name="Title" value="<%= chn.title %>"><br>
   <label for="descrip">Beschreibung:</label><br>
-  <input type="text" id="descrip" name="descrip" value="<%= chn.chan_descrip %>"><br>
+  <input type="text" id="descrip" name="descrip" value="<%= chn.description %>"><br>
   <label for="loginOnly">Nur für User: </label>
-  <input type="checkbox" id="loginOnly" name="loginOnly" <% if (chn.chan_log_on_only == 1 ) {%> checked <%}%>><br>
+  <input type="checkbox" id="loginOnly" name="loginOnly" <% if (chn.userOnly == 1 ) {%> checked <%}%>><br>
   <label>Chat:</label> 
   <select name="chat" id="chat">
-    <option value=1 <% if(chn.chan_chat == 1) {%> selected <% } %> >Kein Chat</option>
-    <option value=2 <% if(chn.chan_chat == 2) {%> selected <% } %> >Einseitiger Chat mit Gast</option>
-    <option value=3 <% if(chn.chan_chat == 3) {%> selected <% } %> >Einseitiger Chat ohne Gast</option>
-    <option value=4 <% if(chn.chan_chat == 4) {%> selected <% } %> >Öffentlicher Chat mit Gast</option>
-    <option value=5 <% if(chn.chan_chat == 5) {%> selected <% } %> >Öffentlicher Chat ohne Gast</option>
+    <option value=1 <% if(chn.chat == 1) {%> selected <% } %> >Kein Chat</option>
+    <option value=2 <% if(chn.chat == 2) {%> selected <% } %> >Einseitiger Chat mit Gast</option>
+    <option value=3 <% if(chn.chat == 3) {%> selected <% } %> >Einseitiger Chat ohne Gast</option>
+    <option value=4 <% if(chn.chat == 4) {%> selected <% } %> >Öffentlicher Chat mit Gast</option>
+    <option value=5 <% if(chn.chat == 5) {%> selected <% } %> >Öffentlicher Chat ohne Gast</option>
   </select><br>
   <label>Feedback:</label> 
   <select name="feedback" id="feedback">
-    <option value=1 <% if(chn.chan_feedback == 1) {%> selected <% } %> >Kein Feedback</option>
-    <option value=2 <% if(chn.chan_feedback == 2) {%> selected <% } %> >User Feedback</option>
-    <option value=3 <% if(chn.chan_feedback == 3) {%> selected <% } %> >Öffentliches</option>
+    <option value=1 <% if(chn.feedback == 1) {%> selected <% } %> >Kein Feedback</option>
+    <option value=2 <% if(chn.feedback == 2) {%> selected <% } %> >User Feedback</option>
+    <option value=3 <% if(chn.feedback == 3) {%> selected <% } %> >Öffentliches</option>
   </select>
   <br>
   <input type="submit" value="Senden">
@@ -98,17 +98,17 @@
 
 <form action="/settings/thumbnails/?_method=post" method="POST" >
   <label>Offline Thumbnail:</label> 
-  <select name="offline" id="offline" value="<%= chn.chan_thumb_offline %>">
-    <option value=1 <% if(chn.chan_thumb_offline== 1) {%> selected <% } %> >Default</option>
-    <option value=2 <% if(chn.chan_thumb_offline== 2) {%> selected <% } %> >Eigenes</option>
+  <select name="offline" id="offline" value="<%= chn.thumb_offline %>">
+    <option value=1 <% if(chn.thumb_offline== 1) {%> selected <% } %> >Default</option>
+    <option value=2 <% if(chn.thumb_offline== 2) {%> selected <% } %> >Eigenes</option>
   </select>
   <br>
 
   <label>Live Thumbnail:</label> 
   <select name="online" id="online">
-    <option value=1 <% if(chn.chan_thumb_online == 1) {%> selected <% } %> >Default</option>
-    <option value=2 <% if(chn.chan_thumb_online == 2) {%> selected <% } %> >Eigenes</option>
-    <option value=3 <% if(chn.chan_thumb_online == 3) {%> selected <% } %> >Auto thumbnail</option>
+    <option value=1 <% if(chn.thumb_online == 1) {%> selected <% } %> >Default</option>
+    <option value=2 <% if(chn.thumb_online == 2) {%> selected <% } %> >Eigenes</option>
+    <option value=3 <% if(chn.thumb_online == 3) {%> selected <% } %> >Auto thumbnail</option>
   </select>
   <br>
   <input type="submit" value="Senden" /> 

@@ -3,6 +3,7 @@ const thumbnail = require('./thumbnail');
 const cron = require('node-cron');
 const fs = require('fs')
 const fetch = require('node-fetch');
+var path = require('path');
 
 const config = {
   logType: 1,
@@ -87,12 +88,13 @@ function delThumbnail(streamKey) {
     
     var path2Thumb = '/media/live/'+ streamKey+ '/thumbnail.png'
     try {
-        fs.unlinkSync(__dirname+path2Thumb)
+    
+        fs.unlinkSync(path.join(__dirname , '../', path2Thumb))
       } catch (err) {
-
+        console.log(err)
       }
 
-    
+      
  
 }
 

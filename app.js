@@ -166,18 +166,18 @@ chatNSP.on("connection", async function(socket){
     var user = await socket.request.user;
     var chn = await database.getChannel([socket.room])
 
-    if(chn[0].chan_chat == 1){
+    if(chn.chat == 1){
       chatNSP.to(socket.id).emit("status", {success: false, asw: "Deaktiviert"} )
     }else if(msg.length > 280){
       chatNSP.to(socket.id).emit("status", {success: false, asw: "Maximal 280 zeichen"} )
     }else if(msg.length <= 0){
       chatNSP.to(socket.id).emit("status", {success: false, asw: "Bro, musst schon was schreiben"} )
-    } else if (!user.nickname && (chn[0].chan_chat == 3 || chn[0].chan_chat == 5)){
+    } else if (!user.nickname && (chn.chat == 3 || chn.chat == 5)){
       chatNSP.to(socket.id).emit("status", {success: false, asw: "User only"} )
     } else {
       chatNSP.to(socket.id).emit("status", {success: true, asw: "Danke für die Nachricht"} )
 
-      if(chn[0].chan_chat == 2 || chn[0].chan_chat == 3 ) {
+      if(chn.chat == 2 || chn.chat == 3 ) {
         var socketIDS = []
         socketIDS = authSockets[socket.room]
     
@@ -189,7 +189,7 @@ chatNSP.on("connection", async function(socket){
           }
           
         });
-      } else if(chn[0].chan_chat == 4 || chn[0].chan_chat == 5 ) {
+      } else if( chan.chat == 4 || chn.chat == 5 ) {
         console.log("Sending to all")
         if(user.nickname){
           chatNSP.to(socket.room).emit("chat message", {name: user.nickname + ": ", msg: msg} )
@@ -258,26 +258,30 @@ app.get("/",  async (req, res) => {
 
 
   var user = await req.user
+
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
 
   var channels = []
 
-  if(!utils.isEmpty(resp))
-  var liveChans = Object.keys(resp.live);
+  if(!utils.isEmpty(resp)){
 
-  for(const item in liveChans){
-
-    var infos = await database.getChannelByKey(liveChans[item])
-    var infos2 = await database.getUser(infos[0].sid)
-
-    var channel = {
-      chan_title : infos[0].chan_title,
-      nickname : infos2.nickname 
-    }
+    var liveChans = Object.keys(resp.live);
     
-    channels.push(channel)
-
+    for(const item in liveChans){
+      console.log(liveChans[item])
+      var infos = await database.getChannelBySKey(liveChans[item])
+      var infos2 = await database.getUser(infos.id)
+      
+      var channel = {
+        title : infos.title,
+        nickname : infos2.nickname 
+      }
+      
+      channels.push(channel)
+  
+    }
   }
+
 
   console.dir(channels)
   res.render('home.ejs', { page: "home", user:user, livechannel: channels} )
@@ -297,10 +301,9 @@ app.get('/login', utils.checkNotAuthenticated, (req, res) => {
 app.get("/settings",utils.checkAuthenticated, async function(req, res){
 
   var user = await req.user
-  var channel = await database.getChannel(user.nickname)
-  var key = await database.getStreamKey(user.nickname)
+  var channel = await database.getChannel(user.id)
 
-  res.render('settings.ejs', { chn: channel[0], Skey:key, page:"channel", user:user, status: req.flash('status'), same:true})
+  res.render('settings.ejs', { chn: channel, Skey:channel.skey, page:"channel", user:user, status: req.flash('status'), same:true})
 
 })
 
@@ -324,7 +327,7 @@ app.post("/settings", utils.checkAuthenticated, async function(req, res){
     req.flash("status", "Fehler: Falsche Chat funktion")
   }
 
-  await database.updateChannel(user.nickname, title, descrip, loginOnly, chat, feedback)
+  await database.updateChannel(user.id, title, descrip, loginOnly, chat, feedback)
 
   
   res.redirect('/channel/' + user.nickname)
@@ -344,7 +347,7 @@ app.post("/settings/thumbnails", utils.checkAuthenticated, async function(req, r
   } else if(online > 3 || online < 1) {
     req.flash("status", "Fehler: 1,2 oder 3")
   } else {
-    await database.updateThumbnails(user.nickname, offline, online)
+    await database.updateThumbnails(user.id, offline, online)
   }
 
   res.redirect('/settings/')
@@ -354,7 +357,7 @@ app.post("/settings/thumbnails", utils.checkAuthenticated, async function(req, r
 app.post("/settings/streamKey", utils.checkAuthenticated, async function (req, res){
 
   var user = await req.user
-  var oldKey = await database.getStreamKey(user.nickname)
+  var oldKey = await database.getStreamKey(user.id)
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
 
   const mkdirAsync = promisify(fs.mkdir)
@@ -367,8 +370,8 @@ app.post("/settings/streamKey", utils.checkAuthenticated, async function (req, r
         return
 
       }else {
-        await database.renewStreamKey(user.nickname)
-        var newKey = await database.getStreamKey(user.nickname)
+        await database.renewStreamKey(user.id)
+        var newKey = await database.getStreamKey(user.id)
         await mkdirAsync(__dirname +"/media/live/"+newKey+ "/")
         
         fs.rename(__dirname +"/media/live/"+oldKey+ "/live.png",__dirname +"/media/live/"+newKey+ "/live.png", (err) =>{
@@ -383,8 +386,8 @@ app.post("/settings/streamKey", utils.checkAuthenticated, async function (req, r
       }
     } else {
       //keiner live
-      await database.renewStreamKey(user.nickname)
-      var newKey = await database.getStreamKey(user.nickname)
+      await database.renewStreamKey(user.id)
+      var newKey = await database.getStreamKey(user.id)
       await mkdirAsync(__dirname +"/media/live/"+newKey+ "/")
         
       fs.rename(__dirname +"/media/live/"+oldKey+ "/live.png",__dirname +"/media/live/"+newKey+ "/live.png", (err) =>{
@@ -404,7 +407,7 @@ app.post("/settings/streamKey", utils.checkAuthenticated, async function (req, r
 app.post("/settings/offline", utils.checkAuthenticated, async function(req,res) {
 
   var user = await req.user
-  var streamKey = await database.getStreamKey(user.nickname)
+  var streamKey = await database.getStreamKey(user.id)
 
 
   var busboy = new Busboy({
@@ -453,8 +456,7 @@ app.post("/settings/offline", utils.checkAuthenticated, async function(req,res) 
 app.post("/settings/live", utils.checkAuthenticated, async function(req,res) {
 
   var user = await req.user
-  var streamKey = await database.getStreamKey(user.nickname)
-
+  var streamKey = await database.getStreamKey(user.id)
 
   var busboy = new Busboy({
     headers: req.headers,
@@ -502,15 +504,16 @@ app.post("/settings/live", utils.checkAuthenticated, async function(req,res) {
 app.get("/channel/:chn", async function(req, res) {
  
   const chn = req.params.chn
-  var channel = await database.getChannel(chn)
+  var channel = await database.getChannelByName(chn)
   var user = await req.user
-  var same
-  var live = false;
-  var key = await database.getStreamKey(chn)
+  var same = false
+  var live = false;  
+
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
 
     if(!utils.isEmpty(resp)){
-      if(Object.keys(resp.live).includes(key)){
+      if(Object.keys(resp.live).includes(channel.skey)){
+
         var live = true;
       }
     }
@@ -524,7 +527,7 @@ app.get("/channel/:chn", async function(req, res) {
   }
   
 
-  res.render('channel.ejs', { name:chn, chn: channel[0], page:"channel", user:user, same:same, live:live})
+  res.render('channel.ejs', { name:chn, chn: channel, page:"channel", user:user, same:same, live:live})
   
 })
 
@@ -553,11 +556,12 @@ app.get("/viewer/:chn", async function(req, res) {
 app.use("/content/:chn", async function(req, res){
 
   var chn = await req.params.chn 
-  var key = await database.getStreamKey(chn)
-  var chnDetails = await database.getChannel(chn)
+  var chnDetails = await database.getChannelByName(chn)
+  var key = chnDetails.skey
+  
 
   
-  if(chnDetails[0].chan_log_on_only == 1){
+  if(chnDetails.userOnly == 1){
     if(!req.isAuthenticated()){
       res.send("NOPE")
       return;
@@ -569,15 +573,15 @@ app.use("/content/:chn", async function(req, res){
 
     if(!utils.isEmpty(resp)){
       if(Object.keys(resp.live).includes(key)){
-        if(chnDetails[0].chan_thumb_online == 1){
+        if(chnDetails.thumb_online == 1){
           res.sendFile(__dirname + "/media/default/live.png")
-        } else if (chnDetails[0].chan_thumb_online == 2){
+        } else if (chnDetails.thumb_online == 2){
           res.sendFile(__dirname + "/media/live/" + key + "/live.png", (err)=>{
             if (err) {
               res.sendFile(__dirname + "/media/default/live.png")
             }
           })
-        } else if (chnDetails[0].chan_thumb_online == 3){
+        } else if (chnDetails.thumb_online == 3){
           res.sendFile(__dirname + "/media/live/" + key + "/thumbnail.png", (err)=>{
             if (err) {
               res.sendFile(__dirname + "/media/live/" + key + "/live.png", (err)=>{
@@ -591,7 +595,7 @@ app.use("/content/:chn", async function(req, res){
         }
         
       } else {
-        if(chnDetails[0].chan_thumb_offline == 1){
+        if(chnDetails.thumb_offline == 1){
           res.sendFile(__dirname + "/media/live/" + key + "/offline.png", (err)=>{
             if (err) {
               res.sendFile(__dirname + "/media/default/offline.png")
@@ -603,7 +607,7 @@ app.use("/content/:chn", async function(req, res){
         
       }
     } else {
-      if(chnDetails[0].chan_thumb_offline == 1){
+      if(chnDetails.thumb_offline == 1){
         res.sendFile(__dirname + "/media/default/offline.png")
       } else {
         
