@@ -176,9 +176,26 @@
     </div>
   <% }%>
 
-  
-  <button onclick="socket2.emit('feedback', '1')">GOOD</button>
-  <button onclick="socket2.emit('feedback', '-1')">BAD</button>
+  <% if (chn.feedback == 1 ) { %>
+    <p>Feedback deaktiviert</p>
+  <% } else if ((chn.feedback == 3 || chn.feedback == 2) && same)  {%>
+    <button onclick="socket2.emit('feedback', '1')">GOOD</button>
+    <button onclick="socket2.emit('feedback', '-1')">BAD</button>
+    <button onclick="socket2.emit('feedback', 'reset')">Reset</button>
+    <p id="feedbackStatus"></p>
+    <p id="Positiv"></p>
+    <p id="Negativ"></p>
+  <% } else if (chn.feedback == 2 && !user)  {%>
+    <p>Feedback deaktiviert, bitte einloggen</p>
+  <% } else if (chn.feedback == 2 && user)  {%>
+    <button onclick="socket2.emit('feedback', '1')">GOOD</button>
+    <button onclick="socket2.emit('feedback', '-1')">BAD</button>
+      <p id="feedbackStatus"></p>
+  <% } else if (chn.feedback == 3)  {%>
+    <button onclick="socket2.emit('feedback', '1')">GOOD</button>
+    <button onclick="socket2.emit('feedback', '-1')">BAD</button>
+      <p id="feedbackStatus"></p>
+  <% }%>
 
   <script>
       //socketIO
@@ -229,8 +246,28 @@
       })
   
       socket2.on("feedback", (data)=>{
-        console.log(data)
+        <% if (chn.feedback == 1 || (chn.feedback == 2 && !user) ) { %>
+    
+
+        <% } else if ((chn.feedback == 3 || chn.feedback == 2) && same)  {%>
+          console.log(data)
+          if(data.positiv || data.positiv == 0 || data.negativ || data.negativ == 0){
+            document.getElementById("Positiv").innerHTML = data.positiv;
+            document.getElementById("Negativ").innerHTML = data.negativ;
+          } else {
+            document.getElementById("feedbackStatus").innerHTML = data.asw;
+          }
+
+
+        <% } else if (chn.feedback == 2 && user)  {%>
+          console.log(data)
+          document.getElementById("feedbackStatus").innerHTML = data.asw;
+        <% } else if (chn.feedback == 3)  {%>
+          console.log(data)
+          document.getElementById("feedbackStatus").innerHTML =data.asw;
+        <% }%>
       })
+
       var btn = document.getElementById("send");
   
       btn.addEventListener('click', e => {

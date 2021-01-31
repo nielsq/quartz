@@ -46,8 +46,6 @@ const sessionStore = new MySQLStore({
 
 initializePassport(passport)
 
-
-
 app.use(express.urlencoded({
   extended: false
 }))
@@ -158,13 +156,11 @@ chatNSP.on("connection", async function(socket){
       utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
     }
 
-
-
   });
 
   socket.on('chat message', async function (msg) {
     var user = await socket.request.user;
-    var chn = await database.getChannel([socket.room])
+    var chn = await database.getChannelByName([socket.room])
 
     if(chn.chat == 1){
       chatNSP.to(socket.id).emit("status", {success: false, asw: "Deaktiviert"} )
@@ -201,39 +197,67 @@ chatNSP.on("connection", async function(socket){
 
     }
    
-    
   });
 
   socket.on("feedback", async function(status) {
 
-    if(viewerfd[socket.room] === undefined){
-      viewerfd[socket.room] = {
-        positiv : [],
-        negativ : [] 
+    var chan = await database.getChannelByName([socket.room])
+    var user = await socket.request.user;
+    
+    if(chan.feedback == 1 ){
+      chatNSP.to(socket.id).emit("feedback", {success: false, asw: "Deaktiviert"} )
+    } else if( chan.feedback == 2 && !user.nickname){
+      chatNSP.to(socket.id).emit("feedback", {success: false, asw: "User only"} )
+    } else if( (chan.feedback == 2 && user.nickname) ||  chan.feedback == 3 ){
+      //chat user ONly WIR SIND USER
+      if(viewerfd[socket.room] === undefined){
+        viewerfd[socket.room] = {
+          positiv : [],
+          negativ : [] 
+        }
       }
+      
+      //feedback 1 = good | 0 = bad
+      if(status == 1){
+        console.log("GOOOD")
+        if(viewerfd[socket.room].positiv.includes(socket.id)) {
+          utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "Vote removed"} )
+        } else {
+          utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
+          viewerfd[socket.room].positiv.push(socket.id)
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "Vote: Positiv"} )
+        }
+       
+      } else if(status == -1) {
+        console.log("NOT GOOOOED")
+        if(viewerfd[socket.room].negativ.includes(socket.id)) {
+          utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "Vote removed"} )
+        } else {
+          utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
+          viewerfd[socket.room].negativ.push(socket.id)
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "Vote: Negativ"} )
+        }
+      }  else if(status == "reset") {
+
+        if(socket.room == user.nickname){
+          viewerfd[socket.room] = {
+            positiv : [],
+            negativ : [] 
+          }
+          chatNSP.to(socket.room).emit("feedback", {success: true, asw: "Vote removed"} )
+        } 
+      } 
+
+      var socketIDS = []
+      socketIDS = authSockets[socket.room]
+      
+      socketIDS.forEach(element => {
+        chatNSP.to(element).emit("feedback", {negativ: viewerfd[socket.room].negativ.length, positiv: viewerfd[socket.room].positiv.length})  
+      });
     }
 
-    utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
-    utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
-
-    //feedback 1 = good | 0 = bad
-    if(status == 1){
-      console.log("GOOOD")
-      viewerfd[socket.room].positiv.push(socket.id)
-    } else if(status == -1) {
-      console.log("NOT GOOOOED")
-      viewerfd[socket.room].negativ.push(socket.id)
-    }   
-
-    var socketIDS = []
-    socketIDS = authSockets[socket.room]
-    
-    socketIDS.forEach(element => {
-      chatNSP.to(element).emit("feedback", {negativ: viewerfd[socket.room].negativ.length, positiv: viewerfd[socket.room].positiv.length})  
-    });
-
-
-  
   })
 
 })
@@ -256,11 +280,8 @@ RTMPserver.startStreamServer(utils.config);
 //routes
 app.get("/",  async (req, res) => {
 
-
   var user = await req.user
-
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
-
   var channels = []
 
   if(!utils.isEmpty(resp)){
@@ -336,7 +357,6 @@ app.post("/settings", utils.checkAuthenticated, async function(req, res){
 
 app.post("/settings/thumbnails", utils.checkAuthenticated, async function(req, res){
 
-
   var user = await req.user
 
   var offline = req.body.offline
@@ -408,7 +428,6 @@ app.post("/settings/offline", utils.checkAuthenticated, async function(req,res) 
 
   var user = await req.user
   var streamKey = await database.getStreamKey(user.id)
-
 
   var busboy = new Busboy({
     headers: req.headers,
@@ -526,7 +545,6 @@ app.get("/channel/:chn", async function(req, res) {
     }
   }
   
-
   res.render('channel.ejs', { name:chn, chn: channel, page:"channel", user:user, same:same, live:live})
   
 })
@@ -550,7 +568,6 @@ app.get("/viewer/:chn", async function(req, res) {
     res.send("Viewer: " + viewer)
   }
 
-  
 })
 
 app.use("/content/:chn", async function(req, res){
@@ -558,8 +575,6 @@ app.use("/content/:chn", async function(req, res){
   var chn = await req.params.chn 
   var chnDetails = await database.getChannelByName(chn)
   var key = chnDetails.skey
-  
-
   
   if(chnDetails.userOnly == 1){
     if(!req.isAuthenticated()){
