@@ -119,11 +119,28 @@ chatNSP.on("connection", async function(socket){
 
   socket.on('join', async function (room) {
 
+    var user = await socket.request.user
+    console.log(room)
+    var chn = await database.getChannelByName(room)
+    var allowedUser = chn.users.split(";")
+
+    if(chn.chat == 1){
+      socket.close()
+      return
+    } else if (!user.nickname && (chn.chat == 3 || chn.chat == 5)){
+      socket.close()
+      return
+    } else if(chn.user_only == 2 && user.logged_in  == false){
+      socket.close()
+      return
+    } else if(chn.user_only == 3 && !allowedUser.includes(user.nickname) && room != user.nickname){
+      socket.close()
+      return
+    }
+
     socket.join(room);
     socket.room = room;
-
-    var user = await socket.request.user
-
+    
     if(user.logged_in  == false){
   
     } else if (user.nickname){
@@ -161,9 +178,14 @@ chatNSP.on("connection", async function(socket){
   socket.on('chat message', async function (msg) {
     var user = await socket.request.user;
     var chn = await database.getChannelByName([socket.room])
+    var allowedUser = chn.users.split(";")
 
     if(chn.chat == 1){
       chatNSP.to(socket.id).emit("status", {success: false, asw: "Deaktiviert"} )
+    } else if((chn.user_only == 2 || chn.user_only == 3) && user.logged_in  == false){
+      chatNSP.to(socket.id).emit("status", {success: false, asw: "Nicht berechtigt"} )
+    } else if((chn.chat == 3 || chn.chat == 5) && !allowedUser.includes(user.nickname) && socket.room != user.nickname && chn.user_only == 3){
+      chatNSP.to(socket.id).emit("status", {success: false, asw: "Nicht berechtigt"} )    
     }else if(msg.length > 280){
       chatNSP.to(socket.id).emit("status", {success: false, asw: "Maximal 280 zeichen"} )
     }else if(msg.length <= 0){
@@ -185,7 +207,7 @@ chatNSP.on("connection", async function(socket){
           }
           
         });
-      } else if( chan.chat == 4 || chn.chat == 5 ) {
+      } else if( chn.chat == 4 || chn.chat == 5 ) {
         console.log("Sending to all")
         if(user.nickname){
           chatNSP.to(socket.room).emit("chat message", {name: user.nickname + ": ", msg: msg} )
@@ -203,11 +225,14 @@ chatNSP.on("connection", async function(socket){
 
     var chan = await database.getChannelByName([socket.room])
     var user = await socket.request.user;
-    
+    var allowedUser = chan.users.split(";")
+
     if(chan.feedback == 1 ){
       chatNSP.to(socket.id).emit("feedback", {success: false, asw: "Deaktiviert"} )
     } else if( chan.feedback == 2 && !user.nickname){
       chatNSP.to(socket.id).emit("feedback", {success: false, asw: "User only"} )
+    } else if( chan.feedback == 2 && !allowedUser.includes(user.nickname) && socket.room != user.nickname && chan.user_only == 3){
+      chatNSP.to(socket.id).emit("feedback", {success: false, asw: "nicht Berechtigt"} )
     } else if( (chan.feedback == 2 && user.nickname) ||  chan.feedback == 3 ){
       //chat user ONly WIR SIND USER
       if(viewerfd[socket.room] === undefined){
@@ -334,21 +359,17 @@ app.post("/settings", utils.checkAuthenticated, async function(req, res){
 
   var title = req.body.Title
   var descrip = req.body.descrip
-  var loginOnly = req.body.loginOnly
   var chat = req.body.chat
   var feedback = req.body.feedback
+  var user_only = req.body.user_only
+  var users = req.body.users
 
-  if(loginOnly == "on"){
-    loginOnly = 1
-  } else {
-    loginOnly = 0
-  }
 
   if(chat > 5 || chat < 0){
     req.flash("status", "Fehler: Falsche Chat funktion")
   }
 
-  await database.updateChannel(user.id, title, descrip, loginOnly, chat, feedback)
+  await database.updateChannel(user.id, title, descrip, user_only, chat, feedback, users)
 
   
   res.redirect('/channel/' + user.nickname)
@@ -575,13 +596,20 @@ app.use("/content/:chn", async function(req, res){
   var chn = await req.params.chn 
   var chnDetails = await database.getChannelByName(chn)
   var key = chnDetails.skey
+  var user = await req.user
+
   
-  if(chnDetails.userOnly == 1){
-    if(!req.isAuthenticated()){
+  if((chnDetails.user_only == 2 || chnDetails.user_only == 3) && !req.isAuthenticated()){
       res.send("NOPE")
       return;
-    }
   } 
+
+    var allowedUser = chnDetails.users.split(";")
+
+  if(chnDetails.user_only == 3 && !allowedUser.includes(user.nickname) && chn != user.nickname){
+    res.send("NOPE")
+    return;
+  }
 
   if(req.url == "/thumbnail.png"){
     var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
@@ -641,8 +669,6 @@ app.use("/content/:chn", async function(req, res){
       }
     });
   }
-
-
 
 })
 

@@ -51,8 +51,14 @@
   <input type="text" id="Title" name="Title" value="<%= chn.title %>"><br>
   <label for="descrip">Beschreibung:</label><br>
   <input type="text" id="descrip" name="descrip" value="<%= chn.description %>"><br>
-  <label for="loginOnly">Nur für User: </label>
-  <input type="checkbox" id="loginOnly" name="loginOnly" <% if (chn.userOnly == 1 ) {%> checked <%}%>><br>
+  <label for="users">Users:</label><br>
+  <input type="text" id="users" name="users" value="<%= chn.users %>"><br>
+  <label>Zuschauer:</label> 
+  <select name="user_only" id="user_only">
+    <option value=1 <% if(chn.user_only == 1) {%> selected <% } %> >Alle</option>
+    <option value=2 <% if(chn.user_only == 2) {%> selected <% } %> >Nur Angemeldete</option>
+    <option value=3 <% if(chn.user_only == 3) {%> selected <% } %> >Bestimmt User</option>
+  </select><br>
   <label>Chat:</label> 
   <select name="chat" id="chat">
     <option value=1 <% if(chn.chat == 1) {%> selected <% } %> >Kein Chat</option>

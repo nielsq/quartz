@@ -17,15 +17,16 @@ class User {
 }
 
 class Channel {
-    constructor(id, title, description, userOnly, thumb_online, thumb_offline, chat, feedback, skey){
+    constructor(id, title, description, user_only, thumb_online, thumb_offline, chat, feedback, users, skey){
         this.id = id
         this.title = title;
         this.description = description;
-        this.userOnly = userOnly;
+        this.user_only = user_only;
         this.thumb_online = thumb_online;
         this.thumb_offline = thumb_offline;
         this.chat = chat;
         this.feedback = feedback;
+        this.users = users;
         this.skey = skey;
     }
 }
@@ -49,8 +50,7 @@ async function getUser(id) {
 
         if(isEmpty(result)){
             var aduser = await ad.getUserById(id);
-
-            if(aduser){
+            if(aduser.nickname){
                 
                 await createUser(aduser.id, aduser.nickname ,aduser.mail, aduser.firstName, aduser.lastName, aduser.displayName)
                 return await getUser(id)
@@ -115,7 +115,7 @@ async function createChannel(id){
          
      })
 
-    var values = "(\"" + id + "\", \"TITLE\", \"DESCIPTION\", \"" + key + "\", 0, 1,1,1,1);"
+    var values = "(\"" + id + "\", \"TITLE\", \"DESCIPTION\", \"" + key + "\", 0, 1,1,1,1,1);"
     var q2 ="INSERT INTO quartz_channel VALUES "
     const [rows2, fields2] = await promisePool.query(q2 + values);
 
@@ -132,10 +132,9 @@ async function renewStreamKey(id){
 
 }
 
-async function updateChannel(id, title, descrip, onlyUser, chat, feedback){
+async function updateChannel(id, title, descrip, only_user, chat, feedback, users){
 
-
-    var values = "title=\""+title+ "\", description=\""+descrip+"\" , userOnly=\""+ onlyUser + "\", chat="+ chat + ", feedback="+ feedback
+    var values = "title=\""+title+ "\", description=\""+descrip+"\" , user_only="+ only_user + ", chat="+ chat + ", feedback="+ feedback + ", users=\""+ users + "\""
     var q = "UPDATE quartz_channel SET " + values + " WHERE id=\""+id + "\";"
 
     await promisePool.query(q);
@@ -157,7 +156,8 @@ async function getChannel(id){
 
     if(isEmpty(rows2)){
 
-        var user = await  ad.getUserByUname(name)
+        console.log(id)
+        var user = await  ad.getUserById(id)
 
         if(isEmpty(user)){
             return false;
@@ -167,8 +167,8 @@ async function getChannel(id){
         }
 
     } else {
-        var channel = new Channel(rows2[0].id, rows2[0].title, rows2[0].description, rows2[0].userOnly,
-            rows2[0].thumb_online, rows2[0].thumb_online, rows2[0].chat, rows2[0].feedback, rows2[0].skey)
+        var channel = new Channel(rows2[0].id, rows2[0].title, rows2[0].description, rows2[0].user_only,
+            rows2[0].thumb_online, rows2[0].thumb_online, rows2[0].chat, rows2[0].feedback, rows2[0].users, rows2[0].skey)
         return channel
     }
 
@@ -176,13 +176,13 @@ async function getChannel(id){
 
 async function getChannelByName(name){
 
-    var q2 ="SELECT quartz_channel.id ,title, description, userOnly, thumb_offline, thumb_online, chat, skey, feedback FROM quartz_channel JOIN quartz_user ON quartz_user.id=quartz_channel.id WHERE quartz_user.nickname = \"" + name + "\";"
+    var q2 ="SELECT quartz_channel.id ,title, description, user_only, thumb_offline, thumb_online, chat, skey, feedback, users FROM quartz_channel JOIN quartz_user ON quartz_user.id=quartz_channel.id WHERE quartz_user.nickname = \"" + name + "\";"
     const [rows2, fields2] = await promisePool.query(q2);
     if(isEmpty(rows2)){
 
         var user = await  ad.getUserByUname(name)
 
-        if(isEmpty(user)){
+        if(isEmpty(user.nickname)){
             return false;
         } else {
             await createUser(user.id,user.nickname,user.mail, user.firstName, user.lastName, user.displayName)
@@ -190,8 +190,8 @@ async function getChannelByName(name){
         }
 
     } else {
-        var channel = new Channel(rows2[0].id, rows2[0].title, rows2[0].description, rows2[0].userOnly,
-            rows2[0].thumb_online, rows2[0].thumb_online, rows2[0].chat, rows2[0].feedback, rows2[0].skey)
+        var channel = new Channel(rows2[0].id, rows2[0].title, rows2[0].description, rows2[0].user_only,
+            rows2[0].thumb_online, rows2[0].thumb_online, rows2[0].chat, rows2[0].feedback, rows2[0].users, rows2[0].skey)
         return channel
     }
 
@@ -203,8 +203,8 @@ async function getChannelBySKey(skey){
     const [rows2, fields2] = await promisePool.query(q2);
 
 
-    var channel = new Channel(rows2[0].id, rows2[0].title, rows2[0].description, rows2[0].userOnly,
-        rows2[0].thumb_online, rows2[0].thumb_online, rows2[0].chat, rows2[0].feedback, rows2[0].skey)
+    var channel = new Channel(rows2[0].id, rows2[0].title, rows2[0].description, rows2[0].user_only,
+        rows2[0].thumb_online, rows2[0].thumb_online, rows2[0].chat, rows2[0].feedback, rows2[0].users, rows2[0].skey)
 
 
     return channel
@@ -240,4 +240,3 @@ function isEmpty(obj) {
   module.exports.getChannelBySKey = getChannelBySKey;
   module.exports.getUserByNickname = getUserByNickname;
   module.exports.getChannelByName = getChannelByName;
-  

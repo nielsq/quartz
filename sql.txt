@@ -4,6 +4,43 @@ CREATE DATABASE sessions;
 CREATE DATABASE quartz;
 USE quartz;
 
-CREATE TABLE quartz_config(key_name VARCHAR(255), setting VARCHAR(255), PRIMARY KEY (key_name));
-CREATE TABLE quartz_user(sid VARCHAR(255), last_login DATETIME, is_logged_in BOOLEAN,PRIMARY KEY (sid));
-CREATE TABLE app_livestream_channel(sid VARCHAR(255), chan_title VARCHAR(255), chan_descrip VARCHAR(255), chan_key VARCHAR(255) UNIQUE, chan_log_on_only BOOLEAN, chan_thumb_online int, chan_thumb_offline int, chan_chat int, chan_feedback int, FOREIGN KEY (sid) REFERENCES quartz_user(sid));
+CREATE TABLE `quartz_channel` (
+	`id` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`title` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`description` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`skey` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`user_only` INT(10,0) NULL DEFAULT NULL,
+	`thumb_online` INT(10,0) NULL DEFAULT NULL,
+	`thumb_offline` INT(10,0) NULL DEFAULT NULL,
+	`chat` INT(10,0) NULL DEFAULT NULL,
+	`feedback` INT(10,0) NULL DEFAULT NULL,
+	`users` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	UNIQUE INDEX `key` (`skey`) USING BTREE,
+	INDEX `sid` (`id`) USING BTREE,
+	CONSTRAINT `FK_quartz_channel_quartz_user` FOREIGN KEY (`id`) REFERENCES `quartz`.`quartz_user` (`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+COLLATE='utf8mb4_0900_ai_ci'
+ENGINE=InnoDB
+;
+
+CREATE TABLE `quartz_user` (
+	`id` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`nickname` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`mail` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`firstName` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`lastName` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`displayName` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	PRIMARY KEY (`id`) USING BTREE
+)
+COLLATE='utf8mb4_0900_ai_ci'
+ENGINE=InnoDB
+;
+
+CREATE TABLE `quartz_config` (
+	`key_name` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`setting` VARCHAR(255) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	PRIMARY KEY (`key_name`) USING BTREE
+)
+COLLATE='utf8mb4_0900_ai_ci'
+ENGINE=InnoDB
+;

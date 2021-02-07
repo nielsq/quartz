@@ -13,10 +13,11 @@
 </header>
 
 
-<% if (chn.userOnly == 1 && !user) { %>
+<% if ((chn.user_only == 2 || chn.user_only == 3)&& !user) { %>
     <p>Bitte Loggen Sie sich ein um den Stream zu sehen</p>
-<% } else {%>
-  
+<% } else if( chn.user_only == 3 && !chn.users.split(";").includes(user.nickname) && !same) { %>
+  <p>Sie sind nicht berechtigt den Stream zu sehen</p>
+<% } else { %>
 
 <div id="livestreamPlayer">
   <link href="/resources/video-js.css" rel="stylesheet">
