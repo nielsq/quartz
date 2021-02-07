@@ -417,8 +417,9 @@ app.post("/settings/streamKey", utils.checkAuthenticated, async function (req, r
         
         fs.rename(__dirname +"/media/live/"+oldKey+ "/live.png",__dirname +"/media/live/"+newKey+ "/live.png", (err) =>{
           fs.rename(__dirname +"/media/live/"+oldKey+ "/offline.png",__dirname +"/media/live/"+newKey+ "/offline.png", (err) =>{
-            fs.rmdir(__dirname +"/media/live/"+oldKey, (err) =>{
-
+            fs.rename(__dirname +"/media/live/"+oldKey+ "/offline.png",__dirname +"/media/live/"+newKey+ "/profile.png", (err) =>{
+              fs.rmdir(__dirname +"/media/live/"+oldKey, (err) =>{
+              })
             })
           })
         })
@@ -433,8 +434,9 @@ app.post("/settings/streamKey", utils.checkAuthenticated, async function (req, r
         
       fs.rename(__dirname +"/media/live/"+oldKey+ "/live.png",__dirname +"/media/live/"+newKey+ "/live.png", (err) =>{
         fs.rename(__dirname +"/media/live/"+oldKey+ "/offline.png",__dirname +"/media/live/"+newKey+ "/offline.png", (err) =>{
-          fs.rmdir(__dirname +"/media/live/"+oldKey, (err) =>{
-
+          fs.rename(__dirname +"/media/live/"+oldKey+ "/offline.png",__dirname +"/media/live/"+newKey+ "/profile.png", (err) =>{
+            fs.rmdir(__dirname +"/media/live/"+oldKey, (err) =>{
+            })
           })
         })
       })
@@ -528,6 +530,54 @@ app.post("/settings/live", utils.checkAuthenticated, async function(req,res) {
 
           fstream.on('close', async function() {
             fs.rename(__dirname +"/media/live/"+streamKey+ "/"+ filename,__dirname +"/media/live/"+streamKey+ "/live.png", (err) => {})
+          });
+        }
+
+    });
+
+    busboy.on('finish', function() {
+      res.redirect('/settings/')
+
+    });
+    return req.pipe(busboy);
+
+})
+
+app.post("/settings/profile", utils.checkAuthenticated, async function(req,res) {
+
+  var user = await req.user
+  var streamKey = await database.getStreamKey(user.id)
+
+  var busboy = new Busboy({
+    headers: req.headers,
+    limits: {
+      fileSize: 2*1024*1024
+    }
+  });
+
+
+  busboy.on('file',  async function(fieldname, file, filename, encoding, mimetype) {
+    //validate against empty file fields
+
+        // validate file mimetype
+        if(mimetype != 'image/png'){
+          req.flash("status", "Fehler: Nur PNG")
+          file.resume();
+        } else {
+         
+          file.on('limit', function(){
+            fs.unlink(__dirname +"/media/live/"+streamKey+ "/"+ filename, function(){ 
+              req.flash("status", "Fehler: Max 2mb")
+             });
+            
+          });
+
+          //storing the uploaded photo
+          fstream = fs.createWriteStream(__dirname +"/media/live/"+streamKey+ "/"+ filename);
+          file.pipe(fstream);
+
+          fstream.on('close', async function() {
+            fs.rename(__dirname +"/media/live/"+streamKey+ "/"+ filename,__dirname +"/media/live/"+streamKey+ "/profile.png", (err) => {})
           });
         }
 
@@ -661,7 +711,13 @@ app.use("/content/:chn", async function(req, res){
         })
       }
     }
-    
+  
+  }else if(req.url == "/profile.png"){
+    res.sendFile(__dirname + "/media/live/" + key + "/profile.png", (err)=>{
+      if (err) {
+        res.sendFile(__dirname + "/media/default/profile.png")
+      }
+    })
   } else {
     res.sendFile(__dirname + "/media/live/" + key + req.url,  function (err) {
       if (err) {
