@@ -208,7 +208,6 @@ chatNSP.on("connection", async function(socket){
           
         });
       } else if( chn.chat == 4 || chn.chat == 5 ) {
-        console.log("Sending to all")
         if(user.nickname){
           chatNSP.to(socket.room).emit("chat message", {name: user.nickname + ": ", msg: msg} )
         } else {
@@ -244,7 +243,6 @@ chatNSP.on("connection", async function(socket){
       
       //feedback 1 = good | 0 = bad
       if(status == 1){
-        console.log("GOOOD")
         if(viewerfd[socket.room].positiv.includes(socket.id)) {
           utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
           chatNSP.to(socket.id).emit("feedback", {success: true, asw: "Vote removed"} )
@@ -255,7 +253,6 @@ chatNSP.on("connection", async function(socket){
         }
        
       } else if(status == -1) {
-        console.log("NOT GOOOOED")
         if(viewerfd[socket.room].negativ.includes(socket.id)) {
           utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
           chatNSP.to(socket.id).emit("feedback", {success: true, asw: "Vote removed"} )
@@ -314,7 +311,6 @@ app.get("/",  async (req, res) => {
     var liveChans = Object.keys(resp.live);
     
     for(const item in liveChans){
-      console.log(liveChans[item])
       var infos = await database.getChannelBySKey(liveChans[item])
       var infos2 = await database.getUser(infos.id)
       

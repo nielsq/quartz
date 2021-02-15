@@ -1,28 +1,33 @@
 
-/*
-Danke an Carlo
-*/
-.chat 
-{
-  display: inline-block;
+.container{
+  max-width: 100%;
+  padding: 0px;
 }
-.information 
-{
-  display: inline-block;
+#chatActions{
+  width:100%;
+  height: 15%;
+  border: 2px solid rgb(0, 0, 0);
 }
 
+#messages{
+	border: 1px solid red;
+	flex-grow: 1;
+  overflow-y: scroll;
+
+}
 .chatcontainer {
+  position: relative;
   height:100%;
-  width: 25%;
-  float: right;
-  display: block;
+  width: 100%;
+	display: flex;
+	flex-direction: column;
   border: 2px solid #dedede;
   background-color: #f1f1f1;
-  border-radius: 5px;
-  
+  position: absolute;
+  bottom: 0;
 }
+
 .messageContainer {
-  
   margin-left: 0.5em;
   margin-right: 0.5em;
   padding:0%;
@@ -46,10 +51,14 @@ Danke an Carlo
 }
 .message 
 {
-  display: inline;
+	display: block;
   overflow: hidden;
   word-break: break-word;
   margin-left:0.2em;
+}
+.information 
+{
+  display: inline-block;
 }
 .inputMessage
 {
@@ -62,6 +71,13 @@ Danke an Carlo
   display:inline;
   overflow: hidden;
   width:25%;
+}
+.no-padding {
+  padding: 0px;
+}
+.no-margin {
+  margin-left:0;
+  margin-right:0;
 }
 
 #sendbottom 
