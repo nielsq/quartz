@@ -245,21 +245,21 @@ chatNSP.on("connection", async function(socket){
       if(status == 1){
         if(viewerfd[socket.room].positiv.includes(socket.id)) {
           utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
-          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "Vote removed"} )
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "removed"} )
         } else {
           utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
           viewerfd[socket.room].positiv.push(socket.id)
-          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "Vote: Positiv"} )
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "positiv"} )
         }
        
       } else if(status == -1) {
         if(viewerfd[socket.room].negativ.includes(socket.id)) {
           utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
-          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "Vote removed"} )
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "removed"} )
         } else {
           utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
           viewerfd[socket.room].negativ.push(socket.id)
-          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "Vote: Negativ"} )
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "negativ"} )
         }
       }  else if(status == "reset") {
 
@@ -268,7 +268,7 @@ chatNSP.on("connection", async function(socket){
             positiv : [],
             negativ : [] 
           }
-          chatNSP.to(socket.room).emit("feedback", {success: true, asw: "Vote removed"} )
+          chatNSP.to(socket.room).emit("feedback", {success: true, asw: "removed"} )
         } 
       } 
 

@@ -68,6 +68,9 @@
       <div class="information" id="StreamInfos">
       <img src="/content/<%=name%>/profile.png" width="150" height="150">
       <h2><%= chn.title %></h2>
+
+      <%- include('./feedback'); %>
+      
       <p> <b><%= name %>: </b >DESCIPTION <%= chn.description %></p>
         
         <% if (live) { %>
@@ -196,6 +199,17 @@
       
         <script>
             //socketIO
+
+            function vote(value){
+
+              if(value == 1){
+                //YES
+                socket2.emit('feedback', '1')
+              } else if(value = -1){
+                //NO
+                socket2.emit('feedback', '-1')
+              }
+            }
              var socket2 = io("/chat");
             socket2.emit('join', "<%=name%>");
       
@@ -248,11 +262,41 @@
       
               <% } else if ((chn.feedback == 3 || chn.feedback == 2) && same)  {%>
                 console.log(data)
+                var yesBTN = document.getElementById("yesBTN");
+                var noBTN = document.getElementById("noBTN");
+
                 if(data.positiv || data.positiv == 0 || data.negativ || data.negativ == 0){
-                  document.getElementById("Positiv").innerHTML = data.positiv;
-                  document.getElementById("Negativ").innerHTML = data.negativ;
+                  yesBTN.textContent = data.positiv + " YES"
+                  noBTN.textContent = data.negativ + " NO"
+
                 } else {
-                  document.getElementById("feedbackStatus").innerHTML = data.asw;
+
+                
+                if(data.asw == "removed"){
+                  yesBTN.classList.remove("btn-success");
+                  yesBTN.classList.add("btn-outline-success");
+
+                  noBTN.classList.remove("btn-danger");
+                  noBTN.classList.add("btn-outline-danger");
+                  
+                } else if(data.asw == "positiv"){
+                  yesBTN.classList.add("btn-success");
+                  yesBTN.classList.remove("btn-outline-success");
+
+                  noBTN.classList.remove("btn-danger");
+                  noBTN.classList.add("btn-outline-danger");
+                  
+                } else if(data.asw == "negativ"){
+                  yesBTN.classList.remove("btn-success");
+                  yesBTN.classList.add("btn-outline-success");
+
+                  noBTN.classList.add("btn-danger");
+                  noBTN.classList.remove("btn-outline-danger");
+                  
+                } else {
+                  console.log("WTF BRO")
+                }
+
                 }
       
       
@@ -261,7 +305,35 @@
                 document.getElementById("feedbackStatus").innerHTML = data.asw;
               <% } else if (chn.feedback == 3)  {%>
                 console.log(data)
-                document.getElementById("feedbackStatus").innerHTML =data.asw;
+
+                var yesBTN = document.getElementById("yesBTN");
+                var noBTN = document.getElementById("noBTN");
+                
+                if(data.asw == "removed"){
+                  yesBTN.classList.remove("btn-success");
+                  yesBTN.classList.add("btn-outline-success");
+
+                  noBTN.classList.remove("btn-danger");
+                  noBTN.classList.add("btn-outline-danger");
+                  
+                } else if(data.asw == "positiv"){
+                  yesBTN.classList.add("btn-success");
+                  yesBTN.classList.remove("btn-outline-success");
+
+                  noBTN.classList.remove("btn-danger");
+                  noBTN.classList.add("btn-outline-danger");
+                  
+                } else if(data.asw == "negativ"){
+                  yesBTN.classList.remove("btn-success");
+                  yesBTN.classList.add("btn-outline-success");
+
+                  noBTN.classList.add("btn-danger");
+                  noBTN.classList.remove("btn-outline-danger");
+                  
+                } else {
+                  console.log("WTF BRO")
+                }
+
               <% }%>
             })
       

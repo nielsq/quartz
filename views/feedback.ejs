@@ -1,20 +1,35 @@
 <% if (chn.feedback == 1 ) { %>
     <p>Feedback deaktiviert</p>
   <% } else if ((chn.feedback == 3 || chn.feedback == 2) && same)  {%>
-    <button onclick="socket2.emit('feedback', '1')">GOOD</button>
-    <button onclick="socket2.emit('feedback', '-1')">BAD</button>
-    <button onclick="socket2.emit('feedback', 'reset')">Reset</button>
+    <div class="btn-group w-100" role="group" aria-label="Basic mixed styles example">
+      <button type="button" id="yesBTN"onclick="vote(1)" class="btn btn-outline-success w-50">YES</button>
+      <button type="button" id="noBTN" onclick="vote(-1)" class="btn btn-outline-danger w-50">NO</button>
+    </div>
+    <div class="btn-group w-100" role="group" aria-label="Basic mixed styles example">
+      <button class="btn btn-warning w-100" onclick="socket2.emit('feedback', 'reset')">Reset</button>
+    </div>
+      
+
+    
+    
     <p id="feedbackStatus"></p>
     <p id="Positiv"></p>
     <p id="Negativ"></p>
   <% } else if (chn.feedback == 2 && !user)  {%>
     <p>Feedback deaktiviert, bitte einloggen</p>
   <% } else if (chn.feedback == 2 && user)  {%>
-    <button onclick="socket2.emit('feedback', '1')">GOOD</button>
-    <button onclick="socket2.emit('feedback', '-1')">BAD</button>
+    <div class="btn-group w-100" role="group" aria-label="Basic mixed styles example">
+      <button type="button" id="yesBTN"onclick="vote(1)" class="btn btn-outline-success w-50">YES</button>
+      <button type="button" id="noBTN" onclick="vote(-1)" class="btn btn-outline-danger w-50">NO</button>
+    </div>
       <p id="feedbackStatus"></p>
   <% } else if (chn.feedback == 3)  {%>
-    <button onclick="socket2.emit('feedback', '1')">GOOD</button>
-    <button onclick="socket2.emit('feedback', '-1')">BAD</button>
+    <div class="btn-group w-100" role="group" aria-label="Basic mixed styles example">
+      <button type="button" id="yesBTN"onclick="vote(1)" class="btn btn-outline-success w-50">YES</button>
+      <button type="button" id="noBTN" onclick="vote(-1)" class="btn btn-outline-danger w-50">NO</button>
+    </div>
       <p id="feedbackStatus"></p>
   <% }%>
+
+
+
