@@ -66,11 +66,14 @@ app.set('view-engine', 'ejs')
 const io = require('socket.io')(server);
 
 var authSockets = {};
+var authSocketsFB = {};
 var viewerCount = {};
 var viewerfd = {}
 
 const chatNSP = io.of("/chat")
 const viewerNSP = io.of("/viewer")
+const feedbackNSP = io.of("/feedback")
+
 
 chatNSP.use(passportSocketIo.authorize({
 
@@ -91,6 +94,17 @@ viewerNSP.use(passportSocketIo.authorize({
   success:      onAuthorizeSuccess, 
   fail:         onAuthorizeFail,
 }));
+
+feedbackNSP.use(passportSocketIo.authorize({
+
+  cookieParser: require("cookie-parser"),
+  key:          'connect.sid', 
+  secret:       process.env.SESSION_SECRET,
+  store:       sessionStore,
+  success:      onAuthorizeSuccess, 
+  fail:         onAuthorizeFail,
+}));
+
 
 viewerNSP.on("connection", async function(socket){
 
@@ -125,16 +139,16 @@ chatNSP.on("connection", async function(socket){
     var allowedUser = chn.users.split(";")
 
     if(chn.chat == 1){
-      socket.close()
+      socket.disconnect()
       return
     } else if (!user.nickname && (chn.chat == 3 || chn.chat == 5)){
-      socket.close()
+      socket.disconnect()
       return
     } else if(chn.user_only == 2 && user.logged_in  == false){
-      socket.close()
+      socket.disconnect()
       return
     } else if(chn.user_only == 3 && !allowedUser.includes(user.nickname) && room != user.nickname){
-      socket.close()
+      socket.disconnect()
       return
     }
 
@@ -284,6 +298,130 @@ chatNSP.on("connection", async function(socket){
 
 })
 
+feedbackNSP.on("connection", async function(socket){
+
+  socket.on('join', async function (room) {
+
+    var user = await socket.request.user
+    console.log(room)
+    var chn = await database.getChannelByName(room)
+    var allowedUser = chn.users.split(";")
+
+    if(chn.feedback == 1){
+      socket.disconnect()
+      return
+    } else if (!user.nickname && chn.feedback == 2 ){
+      socket.disconnect()
+      return
+    } else if(chn.user_only == 2 && user.logged_in  == false){
+      socket.disconnect()
+      return
+    } else if(chn.user_only == 3 && !allowedUser.includes(user.nickname) && room != user.nickname){
+      socket.disconnect()
+      return
+    }
+
+    socket.join(room);
+    socket.room = room;
+    
+    if(user.logged_in  == false){
+  
+    } else if (user.nickname){
+
+      var ary = [];
+      if(!authSocketsFB[user.nickname]){
+  
+        ary[0] = socket.id
+  
+        authSocketsFB[user.nickname] = ary
+  
+      } else {
+  
+        ary = authSocketsFB[user.nickname]
+        ary[ary.length] = socket.id
+        authSocketsFB[user.nickname] = ary
+  
+      }
+      
+    } 
+  });
+
+  socket.on('disconnect', async function () {
+
+    if(socket.room){
+      var socketIDS = []
+      socketIDS = authSocketsFB[socket.room]
+      utils.removeItemOnce(socketIDS, socket.id)
+      utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
+      utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
+    }
+
+  });
+
+  socket.on("feedback", async function(status) {
+
+    var chan = await database.getChannelByName([socket.room])
+    var user = await socket.request.user;
+    var allowedUser = chan.users.split(";")
+
+    if(chan.feedback == 1 ){
+      chatNSP.to(socket.id).emit("feedback", {success: false, asw: "Deaktiviert"} )
+    } else if( chan.feedback == 2 && !user.nickname){
+      chatNSP.to(socket.id).emit("feedback", {success: false, asw: "User only"} )
+    } else if( chan.feedback == 2 && !allowedUser.includes(user.nickname) && socket.room != user.nickname && chan.user_only == 3){
+      chatNSP.to(socket.id).emit("feedback", {success: false, asw: "nicht Berechtigt"} )
+    } else if( (chan.feedback == 2 && user.nickname) ||  chan.feedback == 3 ){
+      //chat user ONly WIR SIND USER
+      if(viewerfd[socket.room] === undefined){
+        viewerfd[socket.room] = {
+          positiv : [],
+          negativ : [] 
+        }
+      }
+      
+      //feedback 1 = good | 0 = bad
+      if(status == 1){
+        if(viewerfd[socket.room].positiv.includes(socket.id)) {
+          utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "removed"} )
+        } else {
+          utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
+          viewerfd[socket.room].positiv.push(socket.id)
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "positiv"} )
+        }
+       
+      } else if(status == -1) {
+        if(viewerfd[socket.room].negativ.includes(socket.id)) {
+          utils.removeItemOnce(viewerfd[socket.room].negativ, socket.id)
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "removed"} )
+        } else {
+          utils.removeItemOnce(viewerfd[socket.room].positiv, socket.id)
+          viewerfd[socket.room].negativ.push(socket.id)
+          chatNSP.to(socket.id).emit("feedback", {success: true, asw: "negativ"} )
+        }
+      }  else if(status == "reset") {
+
+        if(socket.room == user.nickname){
+          viewerfd[socket.room] = {
+            positiv : [],
+            negativ : [] 
+          }
+          chatNSP.to(socket.room).emit("feedback", {success: true, asw: "removed"} )
+        } 
+      } 
+
+      var socketIDS = []
+      socketIDS = authSocketsFB[socket.room]
+      
+      socketIDS.forEach(element => {
+        chatNSP.to(element).emit("feedback", {negativ: viewerfd[socket.room].negativ.length, positiv: viewerfd[socket.room].positiv.length})  
+      });
+    }
+
+  })
+
+})
+
 
 function onAuthorizeSuccess(data, accept){
 
@@ -297,7 +435,6 @@ function onAuthorizeFail(data, message, error, accept){
 
 //rtmp
 RTMPserver.startStreamServer(utils.config);
-
 
 //routes
 app.get("/",  async (req, res) => {
@@ -646,14 +783,23 @@ app.use("/content/:chn", async function(req, res){
 
   
   if((chnDetails.user_only == 2 || chnDetails.user_only == 3) && !req.isAuthenticated()){
-      res.send("NOPE")
-      return;
+    res.sendFile(__dirname + "/media/default/censored/" + req.url, (err)=>{
+      if (err) {
+        res.send("NOPE")
+      }
+    })
+
+    return;
   } 
 
     var allowedUser = chnDetails.users.split(";")
 
   if(chnDetails.user_only == 3 && !allowedUser.includes(user.nickname) && chn != user.nickname){
-    res.send("NOPE")
+    res.sendFile(__dirname + "/media/default/censored/" + req.url, (err)=>{
+      if (err) {
+        res.send("NOPE")
+      }
+    })
     return;
   }
 

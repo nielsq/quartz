@@ -1,363 +1,235 @@
 <!DOCTYPE html>
 <html lang="de">
-<head>
+  <head>
+    <%- include('./head'); %>
+    <script src="https://unpkg.com/socket.io-client@3.0.1/dist/socket.io.min.js"></script>
+    <link rel="stylesheet" href="/resources/channel.css" />
+  </head>
+  <body>
+    <header><%- include('./header'); %></header>
 
-  <%- include('./head'); %>
-  <script src="https://unpkg.com/socket.io-client@3.0.1/dist/socket.io.min.js"></script>
-  <link rel="stylesheet" href="/resources/channel.css">
-</head>
-<body>
+    <div class="container">
+      <div class="row no-margin">
+        <div class="col-9 no-padding">
+          <link href="/resources/video-js.css" rel="stylesheet" />
+          <script src="/resources/video.min.js"></script>
 
-<header>
-  <%- include('./header'); %>
-</header>
+          <video-js
+            id="vid1"
+            class="vjs-default-skin"
+            controls
+            poster="/content/<%=name%>/thumbnail.png"
+          >
+            <source
+              src="/content/<%=name%>/index.m3u8"
+              ,
+              type="application/x-mpegURL"
+            />
+          </video-js>
 
-<div class="container">
-  <div class="row no-margin">
-    <div class="col-9 no-padding"> 
+          <script>
+            var socket = io("/viewer");
+            socket.emit('join', "<%=name%>");
 
-      <% if ((chn.user_only == 2 || chn.user_only == 3)&& !user) { %>
-        <p>Bitte Loggen Sie sich ein um den Stream zu sehen</p>
-      <% } else if( chn.user_only == 3 && !chn.users.split(";").includes(user.nickname) && !same) { %>
-        <p>Sie sind nicht berechtigt den Stream zu sehen</p>
-      <% } else { %>
+            var player = videojs('vid1');
+            player.fluid(true);
+            if(!<%=live%>){
+              player.bigPlayButton.hide();
+              player.errorDisplay.dispose();
+            }
 
-      <link href="/resources/video-js.css" rel="stylesheet">
-      <script src="/resources/video.min.js"></script>
-  
-      <video-js id=vid1  class="vjs-default-skin" controls poster='/content/<%=name%>/thumbnail.png' >
-        <source
-          src="/content/<%=name%>/index.m3u8",
-          type="application/x-mpegURL"> 
-      </video-js>
-  
-      <script>
-        var socket = io("/viewer");
-        socket.emit('join', "<%=name%>");
-  
-        var player = videojs('vid1');
-        player.fluid(true);
-        if(!<%=live%>){
-          player.bigPlayButton.hide();
-          player.errorDisplay.dispose();
-        }
-  
-        player.on('dblclick', function() {
-          this.requestFullscreen(); 
-  
-          player.on('dblclick', function() {
-          this.exitFullscreen(); 
-        });
-  
-        });
-  
-        player.on('pause', function() {
-          this.bigPlayButton.show();
-  
-          player.one('play', function() {
-            this.bigPlayButton.hide();
-          });
-  
-        });
+            player.on('dblclick', function() {
+              this.requestFullscreen();
 
-        //autoplay?
-        //player.play();
-  
-      </script>
-    
-      <div class="information" id="StreamInfos">
-      <img src="/content/<%=name%>/profile.png" width="150" height="150">
-      <h2><%= chn.title %></h2>
+              player.on('dblclick', function() {
+              this.exitFullscreen();
+            });
 
-      <%- include('./feedback'); %>
-      
-      <p> <b><%= name %>: </b >DESCIPTION <%= chn.description %></p>
-        
-        <% if (live) { %>
-    
-            <script async type="module">
-        
-              await sleep(1000)
-              loadViewer()
-                function httpGetAsync(theUrl, callback) {
-            
-                  var xmlHttp = new XMLHttpRequest();
-                  xmlHttp.onreadystatechange = function() { 
-                    if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-                        callback(xmlHttp.responseText);
-                  }
-            
-                  xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-                  xmlHttp.send(null);
-                }
-            
-                function sleep(milliseconds) {
-                  return new Promise(resolve => setTimeout(resolve, milliseconds));
-                }
-            
-                async function loadViewer(){
-                  
-                  const url='https://vssubuntu/viewer/<%=name%>'
-            
-                  httpGetAsync(url, (data)=>{
-                    console.log(data)
-                    document.getElementById("viewer").innerHTML = data;
-                  })
-            
-                  await sleep(15000)
-            
-                  loadViewer()
-                }
-            </script>
-        
-            <p id="viewer"></p>
-           
-        
-        <% } %>
-    
-        <% if(same){ %>
-    
-          <a href="/settings" > Einstellungen</a>
-      
-        <% } %>
-      </div>
-    
-      <% }%>
+            });
 
-    </div>
-    <div class="col-3 no-padding">
+            player.on('pause', function() {
+              this.bigPlayButton.show();
 
-        <% if (chn.chat == 1 ) { %>
-          <p>chat deaktiviert</p>
-          <% } else if ((chn.chat == 3 || chn.chat == 2) && same)  {%>
-            <div class="chatcontainer">
-              <p>Chat:</p>
-              <ul id="chatlist" class="chat">
-          
-              </ul>
+              player.one('play', function() {
+                this.bigPlayButton.hide();
+              });
+
+            });
+
+            //autoplay?
+            //player.play();
+          </script>
+
+          <div class="row no-margin">
+            <div class="col-6 no-padding w-100">
+              <div class="card mb-3 w-100">
+                <div class="row g-0">
+                  <div class="col-md-4">
+                    <img
+                      src="/content/<%=name%>/profile.png"
+                      alt="..."
+                      style="max-width: 120px"
+                    />
+                  </div>
+                  <div class="col-md-8">
+                    <div class="card-body">
+                      <h5 class="card-title"><%= chn.title %></h5>
+                      <p class="card-text">
+                        <b><%= name %>: </b>DESCIPTION <%= chn.description %>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 no-padding">
+              <% if ((chn.chat == 3 && user|| chn.chat == 2) && !same) {%>
+
               <div id="sendbottom">
-                <input class="inputMessage" type="text" id="msg"/>
-                <input type="button" id="send" value="send" class="inlineButton">
+                <input class="inputMessage" type="text" id="msg" />
+                <input
+                  type="button"
+                  id="send"
+                  value="send"
+                  class="inlineButton"
+                  *
+                />
                 <p id="sendStatus"></p>
               </div>
-              <%- include('./feedback'); %>
+              <br />
+              <% } %> <%- include('./feedback'); %>
             </div>
-        <% } else if (chn.chat == 2 )  {%>
-          <div class="chatcontainer">
-            <div id="sendbottom">
-              <input class="inputMessage" type="text" id="msg"/>
-              <input type="button" id="send" value="send" class="inlineButton">
-              <p id="sendStatus"></p>
-            </div>
-            <%- include('./feedback'); %>
+            <% if(same){ %>
+            <a href="/settings"> Einstellungen</a>
+            <% } %> <% if (live) { %>
+
+            <script async type="module">
+              await sleep(1000);
+              loadViewer();
+
+              function httpGetAsync(theUrl, callback) {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.onreadystatechange = function () {
+                  if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                    callback(xmlHttp.responseText);
+                };
+
+                xmlHttp.open("GET", theUrl, true); // true for asynchronous
+                xmlHttp.send(null);
+              }
+
+              function sleep(milliseconds) {
+                return new Promise((resolve) =>
+                  setTimeout(resolve, milliseconds)
+                );
+              }
+
+              async function loadViewer() {
+                const url = "https://vssubuntu/viewer/<%=name%>";
+
+                httpGetAsync(url, (data) => {
+                  console.log(data);
+                  document.getElementById("viewer").innerHTML = data;
+                });
+                await sleep(15000);
+                loadViewer();
+              }
+            </script>
+
+            <p id="viewer"></p>
+
+            <% } %>
           </div>
-        <% } else if (chn.chat == 3 && !user)  {%>
-          <p>chat deaktiviert, bitte einloggen</p>
-        <% } else if (chn.chat == 3 && user && !same)  {%>
-          <div class="chatcontainer">
-            <div id="sendbottom">
-              <input class="inputMessage" type="text" id="msg"/>
-              <input type="button" id="send" value="send" class="inlineButton">
-              <p id="sendStatus"></p>
-            </div>
-            <%- include('./feedback'); %>
-          </div>
-        <% } else if (chn.chat == 4 )  {%>
-          <div class="chatcontainer">
-            <p>Chat:</p>
-            <ul id="chatlist" class="chat">
-        
-            </ul>
-            <div id="sendbottom">
-              <input class="inputMessage" type="text" id="msg"/>
-              <input type="button" id="send" value="send" class="inlineButton">
-              <p id="sendStatus"></p>
-            </div>
-            <%- include('./feedback'); %>
-          </div>
-        <% } else if (chn.chat == 5 && !user)  {%>
-          <p>chat deaktiviert, bitte einloggen</p>
-        <% } else if (chn.chat == 5 && user)  {%>
+        </div>
+        <div class="col-3 no-padding">
+          <% if (chn.chat == 1 ) { %>
+          <p>chat deaktiviert</p>
+
+          <% } else if (((chn.chat == 3 || chn.chat == 2) && same) || (chn.chat
+          == 4 ) || (chn.chat == 5 && user) ){%>
           <div class="chatcontainer">
             <div id="messages">
               <p>Chat:</p>
-              <ul id="chatlist" class="chat">
-                
-              </ul>
+              <ul id="chatlist" class="chat"></ul>
             </div>
             <div id="chatActions">
               <div id="sendbottom">
-                <input class="inputMessage" type="text" id="msg"/>
-                <input type="button" id="send" value="send" class="inlineButton">
+                <input class="inputMessage" type="text" id="msg" />
+                <input
+                  type="button"
+                  id="send"
+                  value="send"
+                  class="inlineButton"
+                />
                 <p id="sendStatus"></p>
               </div>
-              <%- include('./feedback'); %>
             </div>
-
           </div>
-        <% }%>
-      
-        <script>
-            //socketIO
+          <% } else if (chn.chat == 3 && !user) {%>
+          <p>chat deaktiviert, bitte einloggen</p>
+          <% } else if (chn.chat == 5 && !user) {%>
+          <p>chat deaktiviert, bitte einloggen</p>
+          <% }%>
 
-            function vote(value){
+          <script>
+            var socketCHAT = io("/chat");
+            socketCHAT.emit("join", "<%=name%>");
 
-              if(value == 1){
-                //YES
-                socket2.emit('feedback', '1')
-              } else if(value = -1){
-                //NO
-                socket2.emit('feedback', '-1')
-              }
-            }
-             var socket2 = io("/chat");
-            socket2.emit('join', "<%=name%>");
-      
             //socket.emit('join', "<%=name%>");
-            socket2.on("chat message", (data) =>{  
-              console.dir(data)
-      
+            socketCHAT.on("chat message", (data) => {
+              console.dir(data);
+
               var userSPAN = document.createElement("SPAN");
-              userSPAN.setAttribute('class', 'username');
+              userSPAN.setAttribute("class", "username");
               var userTEXT = document.createTextNode(data.name);
               userSPAN.appendChild(userTEXT);
-      
-      
+
               var msgSPAN = document.createElement("SPAN");
-              msgSPAN.setAttribute('class', 'message');
+              msgSPAN.setAttribute("class", "message");
               var msgTEXT = document.createTextNode(data.msg);
               msgSPAN.appendChild(msgTEXT);
-      
+
               var node = document.createElement("LI");
-              node.setAttribute('class', 'messageContainer');
-      
+              node.setAttribute("class", "messageContainer");
+
               node.appendChild(userSPAN);
               node.appendChild(msgSPAN);
-      
+
               var ul = document.getElementById("chatlist");
               ul.appendChild(node);
-      
-            })
-      
-            socket2.on("status", async (data) =>{  
-      
-              console.dir(data)
-      
-              if(data.success){
-      
+            });
+
+            socketCHAT.on("status", async (data) => {
+              if (data.success) {
                 document.getElementById("sendStatus").innerHTML = data.asw;
-                document.getElementById('msg').value = '';
+                document.getElementById("msg").value = "";
               } else {
-                
                 document.getElementById("sendStatus").innerHTML = data.asw;
               }
-      
-              await sleep(3000)
-              document.getElementById("sendStatus").innerHTML = '';
-            })
-        
-            socket2.on("feedback", (data)=>{
-              <% if (chn.feedback == 1 || (chn.feedback == 2 && !user) ) { %>
-          
-      
-              <% } else if ((chn.feedback == 3 || chn.feedback == 2) && same)  {%>
-                console.log(data)
-                var yesBTN = document.getElementById("yesBTN");
-                var noBTN = document.getElementById("noBTN");
 
-                if(data.positiv || data.positiv == 0 || data.negativ || data.negativ == 0){
-                  yesBTN.textContent = data.positiv + " YES"
-                  noBTN.textContent = data.negativ + " NO"
+              await sleep(3000);
+              document.getElementById("sendStatus").innerHTML = "";
+            });
 
-                } else {
-
-                
-                if(data.asw == "removed"){
-                  yesBTN.classList.remove("btn-success");
-                  yesBTN.classList.add("btn-outline-success");
-
-                  noBTN.classList.remove("btn-danger");
-                  noBTN.classList.add("btn-outline-danger");
-                  
-                } else if(data.asw == "positiv"){
-                  yesBTN.classList.add("btn-success");
-                  yesBTN.classList.remove("btn-outline-success");
-
-                  noBTN.classList.remove("btn-danger");
-                  noBTN.classList.add("btn-outline-danger");
-                  
-                } else if(data.asw == "negativ"){
-                  yesBTN.classList.remove("btn-success");
-                  yesBTN.classList.add("btn-outline-success");
-
-                  noBTN.classList.add("btn-danger");
-                  noBTN.classList.remove("btn-outline-danger");
-                  
-                } else {
-                  console.log("WTF BRO")
-                }
-
-                }
-      
-      
-              <% } else if (chn.feedback == 2 && user)  {%>
-                console.log(data)
-                document.getElementById("feedbackStatus").innerHTML = data.asw;
-              <% } else if (chn.feedback == 3)  {%>
-                console.log(data)
-
-                var yesBTN = document.getElementById("yesBTN");
-                var noBTN = document.getElementById("noBTN");
-                
-                if(data.asw == "removed"){
-                  yesBTN.classList.remove("btn-success");
-                  yesBTN.classList.add("btn-outline-success");
-
-                  noBTN.classList.remove("btn-danger");
-                  noBTN.classList.add("btn-outline-danger");
-                  
-                } else if(data.asw == "positiv"){
-                  yesBTN.classList.add("btn-success");
-                  yesBTN.classList.remove("btn-outline-success");
-
-                  noBTN.classList.remove("btn-danger");
-                  noBTN.classList.add("btn-outline-danger");
-                  
-                } else if(data.asw == "negativ"){
-                  yesBTN.classList.remove("btn-success");
-                  yesBTN.classList.add("btn-outline-success");
-
-                  noBTN.classList.add("btn-danger");
-                  noBTN.classList.remove("btn-outline-danger");
-                  
-                } else {
-                  console.log("WTF BRO")
-                }
-
-              <% }%>
-            })
-      
             var btn = document.getElementById("send");
-        
-            btn.addEventListener('click', e => {
-              e.preventDefault()
-        
-              var msg2send = document.getElementById('msg').value;
-              
-              console.log("sending: " + msg2send)
-              socket2.emit('chat message', msg2send);
-            })
-            
-            function sleep(milliseconds) {
-              return new Promise(resolve => setTimeout(resolve, milliseconds));
-            }
-      
-          </script>
-      
-    </div>
-  </div>
 
-</div>
- 
-</body>
+            btn.addEventListener("click", (e) => {
+              e.preventDefault();
+
+              var msg2send = document.getElementById("msg").value;
+
+              console.log("sending: " + msg2send);
+              socketCHAT.emit("chat message", msg2send);
+            });
+
+            function sleep(milliseconds) {
+              return new Promise((resolve) =>
+                setTimeout(resolve, milliseconds)
+              );
+            }
+          </script>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
