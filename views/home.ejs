@@ -1,34 +1,44 @@
 <!DOCTYPE html>
 <html lang="de">
-<head>
+  <head>
+    <%- include('./head'); %>
+    <link rel="stylesheet" href="/resources/home.css" />
+  </head>
 
-  <%- include('./head'); %>
+  <body>
+    <header><%- include('./header'); %></header>
 
-</head>
+    <div class="card-deck">
+      <% for(var i=0; i < livechannel.length; i++) { %>
 
-<header>
+      <div class="card">
+        <p>
+          <a href="/channel/<%= livechannel[i].nickname %>">
+            <img
+              src="/content/<%=livechannel[i].nickname%>/thumbnail.png"
+              class="card-img-top"
+              alt="..."
+              href="/channel/<%= livechannel[i].nickname %>"
+            />
+          </a>
+        </p>
 
-  <%- include('./header'); %>
+        <div class="card-body">
+          <h4 class="card-title"><%= livechannel[i].title %></h4>
+          <p class="card-text">
+            <b><%= livechannel[i].nickname %>: </b> <%=
+            livechannel[i].description %>
+          </p>
+        </div>
+      </div>
 
-</header>
+      <% } %>
+    </div>
 
-<% for(var i=0; i < livechannel.length; i++) { %>
-  <div>
-    <img src="/content/<%=livechannel[i].nickname%>/thumbnail.png" width="150" height="100" id="<%= livechannel[i].nickname %>">
-    <a href="/channel/<%= livechannel[i].nickname %>"><b><%= livechannel[i].nickname %>: </b>  <%= livechannel[i].chan_title %></a>
-  </div>
+    <a href="/channel/nquanz"> nquanz</a>
+    <a href="/channel/ewiedmer"> ewiedmer</a>
+    <a href="/settings"> Einstellungen</a>
 
-<% } %>
-
-
-  <a href="/channel/nquanz" > nquanz</a>
-  <a href="/channel/ewiedmer" > ewiedmer</a>
-  <a href="/settings" > Einstellungen</a>
-
-<footer>
-    <%- include('./footer'); %>
-</footer>
-
-</body>
+    <footer><%- include('./footer'); %></footer>
+  </body>
 </html>
-

@@ -1,0 +1,13 @@
+.card {
+  max-width: 400px;
+}
+
+.card-img-top {
+  border: black;
+  border-radius: 5px;
+}
+.card-deck {
+  padding: 20px;
+
+  margin: auto;
+}

@@ -453,7 +453,8 @@ app.get("/",  async (req, res) => {
       
       var channel = {
         title : infos.title,
-        nickname : infos2.nickname 
+        nickname : infos2.nickname,
+        description : infos.description
       }
       
       channels.push(channel)
