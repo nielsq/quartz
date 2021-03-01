@@ -134,7 +134,6 @@ chatNSP.on("connection", async function(socket){
   socket.on('join', async function (room) {
 
     var user = await socket.request.user
-    console.log(room)
     var chn = await database.getChannelByName(room)
     var allowedUser = chn.users.split(";")
 
@@ -303,7 +302,6 @@ feedbackNSP.on("connection", async function(socket){
   socket.on('join', async function (room) {
 
     var user = await socket.request.user
-    console.log(room)
     var chn = await database.getChannelByName(room)
     var allowedUser = chn.users.split(";")
 
@@ -462,8 +460,6 @@ app.get("/",  async (req, res) => {
     }
   }
 
-
-  console.dir(channels)
   res.render('home.ejs', { page: "home", user:user, livechannel: channels} )
 
 })

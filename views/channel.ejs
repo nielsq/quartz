@@ -10,7 +10,7 @@
 
     <div class="container">
       <div class="row no-margin">
-        <div class="col-9 no-padding">
+        <div class="no-padding" id="showMax">
           <link href="/resources/video-js.css" rel="stylesheet" />
           <script src="/resources/video.min.js"></script>
 
@@ -77,6 +77,47 @@
                       <p class="card-text">
                         <b><%= name %>: </b>DESCIPTION <%= chn.description %>
                       </p>
+                      <% if (live) { %>
+
+                      <script async type="module">
+                        await sleep(1000);
+                        loadViewer();
+
+                        function httpGetAsync(theUrl, callback) {
+                          var xmlHttp = new XMLHttpRequest();
+                          xmlHttp.onreadystatechange = function () {
+                            if (
+                              xmlHttp.readyState == 4 &&
+                              xmlHttp.status == 200
+                            )
+                              callback(xmlHttp.responseText);
+                          };
+
+                          xmlHttp.open("GET", theUrl, true); // true for asynchronous
+                          xmlHttp.send(null);
+                        }
+
+                        function sleep(milliseconds) {
+                          return new Promise((resolve) =>
+                            setTimeout(resolve, milliseconds)
+                          );
+                        }
+
+                        async function loadViewer() {
+                          const url = "https://vssubuntu/viewer/<%=name%>";
+
+                          httpGetAsync(url, (data) => {
+                            console.log(data);
+                            document.getElementById("viewer").innerHTML = data;
+                          });
+                          await sleep(15000);
+                          loadViewer();
+                        }
+                      </script>
+
+                      <p id="viewer"></p>
+
+                      <% } %>
                     </div>
                   </div>
                 </div>
@@ -100,48 +141,15 @@
               <% } %> <%- include('./feedback'); %>
             </div>
             <% if(same){ %>
-            <a href="/settings"> Einstellungen</a>
-            <% } %> <% if (live) { %>
 
-            <script async type="module">
-              await sleep(1000);
-              loadViewer();
-
-              function httpGetAsync(theUrl, callback) {
-                var xmlHttp = new XMLHttpRequest();
-                xmlHttp.onreadystatechange = function () {
-                  if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-                    callback(xmlHttp.responseText);
-                };
-
-                xmlHttp.open("GET", theUrl, true); // true for asynchronous
-                xmlHttp.send(null);
-              }
-
-              function sleep(milliseconds) {
-                return new Promise((resolve) =>
-                  setTimeout(resolve, milliseconds)
-                );
-              }
-
-              async function loadViewer() {
-                const url = "https://vssubuntu/viewer/<%=name%>";
-
-                httpGetAsync(url, (data) => {
-                  console.log(data);
-                  document.getElementById("viewer").innerHTML = data;
-                });
-                await sleep(15000);
-                loadViewer();
-              }
-            </script>
-
-            <p id="viewer"></p>
-
+            <a href="/settings"
+              ><br />
+              Einstellungen
+            </a>
             <% } %>
           </div>
         </div>
-        <div class="col-3 no-padding">
+        <div class="no-padding" id="showChat">
           <% if (chn.chat == 1 ) { %>
           <p>chat deaktiviert</p>
 
@@ -154,12 +162,12 @@
             </div>
             <div id="chatActions">
               <div id="sendbottom">
-                <input class="inputMessage" type="text" id="msg" />
+                <input type="text" class="form-control inputMessage" id="msg" />
                 <input
                   type="button"
                   id="send"
                   value="send"
-                  class="inlineButton"
+                  class="inlineButton btn btn-primary"
                 />
                 <p id="sendStatus"></p>
               </div>
@@ -171,62 +179,80 @@
           <p>chat deaktiviert, bitte einloggen</p>
           <% }%>
 
-          <script>
-            var socketCHAT = io("/chat");
-            socketCHAT.emit("join", "<%=name%>");
+          <script defer>
 
-            //socket.emit('join', "<%=name%>");
-            socketCHAT.on("chat message", (data) => {
-              console.dir(data);
 
-              var userSPAN = document.createElement("SPAN");
-              userSPAN.setAttribute("class", "username");
-              var userTEXT = document.createTextNode(data.name);
-              userSPAN.appendChild(userTEXT);
+            var showChat = document.getElementById("showChat")
+            var showMax = document.getElementById("showMax")
+            <% if (chn.chat == 1 || (chn.chat == 2 && !same) || (chn.chat == 3 && !same) || (chn.chat == 5 && !user)) { %>
 
-              var msgSPAN = document.createElement("SPAN");
-              msgSPAN.setAttribute("class", "message");
-              var msgTEXT = document.createTextNode(data.msg);
-              msgSPAN.appendChild(msgTEXT);
+            showChat.classList.add("col-0");
+            showChat.hidden = true
+            showMax.classList.add("col-12");
+            <% } else { %>
+             showChat.classList.add("col-3");
+             showMax.classList.add("col-9");
+            <%  } %>
 
-              var node = document.createElement("LI");
-              node.setAttribute("class", "messageContainer");
+                  var socketCHAT = io("/chat");
+                  socketCHAT.emit("join", "<%=name%>");
 
-              node.appendChild(userSPAN);
-              node.appendChild(msgSPAN);
+                  //socket.emit('join', "<%=name%>");
+                  socketCHAT.on("chat message", (data) => {
+                    console.dir(data);
 
-              var ul = document.getElementById("chatlist");
-              ul.appendChild(node);
-            });
+                    var userSPAN = document.createElement("SPAN");
+                    userSPAN.setAttribute("class", "username");
+                    var userTEXT = document.createTextNode(data.name);
+                    userSPAN.appendChild(userTEXT);
 
-            socketCHAT.on("status", async (data) => {
-              if (data.success) {
-                document.getElementById("sendStatus").innerHTML = data.asw;
-                document.getElementById("msg").value = "";
-              } else {
-                document.getElementById("sendStatus").innerHTML = data.asw;
-              }
+                    var msgSPAN = document.createElement("SPAN");
+                    msgSPAN.setAttribute("class", "message");
+                    var msgTEXT = document.createTextNode(data.msg);
+                    msgSPAN.appendChild(msgTEXT);
 
-              await sleep(3000);
-              document.getElementById("sendStatus").innerHTML = "";
-            });
+                    var node = document.createElement("LI");
+                    node.setAttribute("class", "messageContainer");
 
-            var btn = document.getElementById("send");
+                    node.appendChild(userSPAN);
+                    node.appendChild(msgSPAN);
 
-            btn.addEventListener("click", (e) => {
-              e.preventDefault();
+                    var ul = document.getElementById("chatlist");
+                    ul.appendChild(node);
 
-              var msg2send = document.getElementById("msg").value;
+                    var messageBody = document.getElementById("messages")
+                    messageBody.scrollTop = messageBody.scrollHeight - messageBody.clientHeight;
 
-              console.log("sending: " + msg2send);
-              socketCHAT.emit("chat message", msg2send);
-            });
+                  });
 
-            function sleep(milliseconds) {
-              return new Promise((resolve) =>
-                setTimeout(resolve, milliseconds)
-              );
-            }
+                  socketCHAT.on("status", async (data) => {
+                    if (data.success) {
+                      document.getElementById("sendStatus").innerHTML = data.asw;
+                      document.getElementById("msg").value = "";
+                    } else {
+                      document.getElementById("sendStatus").innerHTML = data.asw;
+                    }
+
+                    await sleep(3000);
+                    document.getElementById("sendStatus").innerHTML = "";
+                  });
+
+                  var btn = document.getElementById("send");
+
+                  btn.addEventListener("click", (e) => {
+                    e.preventDefault();
+
+                    var msg2send = document.getElementById("msg").value;
+
+                    console.log("sending: " + msg2send);
+                    socketCHAT.emit("chat message", msg2send);
+                  });
+
+                  function sleep(milliseconds) {
+                    return new Promise((resolve) =>
+                      setTimeout(resolve, milliseconds)
+                    );
+                  }
           </script>
         </div>
       </div>

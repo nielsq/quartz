@@ -127,7 +127,6 @@ async function renewStreamKey(id){
 
     var values = "skey=\""+newUUID+ "\""
     var q = "UPDATE quartz_channel SET " + values + " WHERE id=\""+id + "\";"
-    console.log(q)
     await promisePool.query(q);
 
 }
@@ -156,7 +155,6 @@ async function getChannel(id){
 
     if(isEmpty(rows2)){
 
-        console.log(id)
         var user = await  ad.getUserById(id)
 
         if(isEmpty(user)){
