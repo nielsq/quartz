@@ -1,6 +1,6 @@
 
 var mysql = require('mysql2');
-var ad = require('./ad')
+var users = require('./user')
 const uuid = require('uuid');
 var mysql = require('mysql2');
 const fs = require('fs')
@@ -49,7 +49,7 @@ async function getUser(id) {
      return await promisePool.query(q1).then ( async ([result, fields]) => {
 
         if(isEmpty(result)){
-            var aduser = await ad.getUserById(id);
+            var aduser = await users.getUserById(id);
             if(aduser.nickname){
                 
                 await createUser(aduser.id, aduser.nickname ,aduser.mail, aduser.firstName, aduser.lastName, aduser.displayName)
@@ -76,7 +76,7 @@ async function getUserByNickname(nickname) {
 
         if(isEmpty(result)){
 
-            var aduser = await ad.getUserByUname(nickname);
+            var aduser = await users.getUserByUname(nickname);
 
             if(aduser){
                 
@@ -155,9 +155,9 @@ async function getChannel(id){
 
     if(isEmpty(rows2)){
 
-        var user = await  ad.getUserById(id)
+        var user = await  users.getUserById(id)
 
-        if(isEmpty(user)){
+        if(!user){
             return false;
         } else {
             await createUser(user.id,user.nickname,user.mail, user.firstName, user.lastName, user.displayName)
@@ -178,9 +178,9 @@ async function getChannelByName(name){
     const [rows2, fields2] = await promisePool.query(q2);
     if(isEmpty(rows2)){
 
-        var user = await  ad.getUserByUname(name)
+        var user = await  users.getUserByUname(name)
 
-        if(isEmpty(user.nickname)){
+        if(!user.nickname){
             return false;
         } else {
             await createUser(user.id,user.nickname,user.mail, user.firstName, user.lastName, user.displayName)

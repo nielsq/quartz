@@ -478,8 +478,9 @@ app.get("/settings",utils.checkAuthenticated, async function(req, res){
 
   var user = await req.user
   var channel = await database.getChannel(user.id)
+  var server = "rtmp://" +  process.env.HostName + "." + process.env.TDL +"/live"
 
-  res.render('settings.ejs', { chn: channel, Skey:channel.skey, page:"channel", user:user, status: req.flash('status'), same:true})
+  res.render('settings.ejs', { chn: channel, Skey:channel.skey, page:"channel", user:user, status: req.flash('status'), same:true, server:server})
 
 })
 
@@ -729,6 +730,11 @@ app.get("/channel/:chn", async function(req, res) {
   var same = false
   var live = false;  
 
+  if(!channel){
+    res.redirect('/')
+    return 
+  }
+
   var resp = await fetch('http://admin:admin@localhost:8000/api/streams').then(res => res.json());
 
     if(!utils.isEmpty(resp)){
@@ -778,7 +784,11 @@ app.use("/content/:chn", async function(req, res){
   var key = chnDetails.skey
   var user = await req.user
 
-  
+  if(!chnDetails){
+    res.send("NOPE")
+    return
+  }
+
   if((chnDetails.user_only == 2 || chnDetails.user_only == 3) && !req.isAuthenticated()){
     res.sendFile(__dirname + "/media/default/censored/" + req.url, (err)=>{
       if (err) {

@@ -41,7 +41,7 @@ const config = {
     api_pass: 'admin',
     play: false,
     publish: false,
-    secret: 'nodemedia2017privatekey'
+    secret: process.env.SECRET_2
   },
   trans: {
     ffmpeg: '/usr/bin/ffmpeg',

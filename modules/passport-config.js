@@ -1,11 +1,11 @@
 const LocalStrategy = require('passport-local').Strategy
-var ad = require('./ad')
+var user = require('./user')
 const database = require('./database');
 
 function initialize(passport) {
   const authenticateUser = async (name, passpord, done) => {
     
-    const result = await ad.authUser(name+ process.env.DOMAIN, passpord)
+    const result = await user.authUser(name+ process.env.DOMAIN, passpord)
     
     if(result){
 
