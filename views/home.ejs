@@ -33,11 +33,11 @@
       </div>
 
       <% } %>
-    </div>
 
-    <a href="/channel/nquanz"> nquanz</a>
-    <a href="/channel/ewiedmer"> ewiedmer</a>
-    <a href="/settings"> Einstellungen</a>
+      <% if (livechannel.length == 0) { %>
+       <p>Looks like nobody is live</p>
+      <% } %>
+    </div>
 
     <footer><%- include('./footer'); %></footer>
   </body>
